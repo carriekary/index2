@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>字幕解析器 + 视频播放器 + 笔记功能</title>
+    <style>
+        /* 全局 box-sizing */
+        * {
+          box-sizing: border-box;
+        }
+        
+        /* Header 采用浅灰色渐变和日式字体 */
+         header {
+          width: 100%;
+          padding: 20px 0;
+          background: linear-gradient(to right, #ffefba, #faf4e4);
+          border-bottom: 3px solid #d32f2f;
+          text-align: center;
+          font-family: "Yu Mincho", "Hiragino Mincho Pro", serif, Arial, sans-serif;
+          margin-bottom: 20px;
+        }
+        header h1 {
+          margin: 0;
+          font-size: 2.5rem;
+          color: #333;
+          letter-spacing: 2px;
+        }
+        
+        /* 整体页面背景设置为浅灰色 */
+        body {
+          background-color: #f5f5f5;
+          margin: 20px;
+          font-family: Arial, sans-serif;
+        }
+        
+        /* 统一按钮和输入框样式：采用中性浅灰边框和白底 */
+        .unified-btn, .unified-input {
+          width: 100%;
+          max-width: 600px;
+          padding: 10px;
+          font-size: 15px;
+          border: 1px solid #ddd;
+          background: #fff;
+          color: #333;
+          border-radius: 5px;
+          box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+          cursor: pointer;
+          transition: background 0.3s, color 0.3s;
+        }
+        .unified-btn:hover {
+          background: #e0e0e0;
+          color: #333;
+        }
+        
+        /* 整体容器：左右两侧并列 */
+        .container {
+          display: flex;
+          width: 90%;
+          max-width: 1200px;
+          margin: 0 auto;
+          gap: 20px;
+        }
+        .left-panel,
+        .right-panel {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+        }
+        
+        /* 控制区域：固定高度、内容居中 */
+        .left-controls,
+        .right-controls {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 5px;
+          height: 100px;
+        }
+        
+        /* 主内容区域（视频、笔记、字幕）的高度保持一致 */
+        .left-main,
+        .right-main {
+          height: 600px;
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+        }
+        /* 左侧主区域分为视频播放器和笔记区域 */
+        .left-main .video-container,
+        .left-main .note-container {
+          flex: 1;
+        }
+        
+        /* 视频播放器区 */
+        .video-container {
+          width: 100%;
+          height: 100%;
+          overflow: hidden;
+          border-radius: 10px;
+        }
+        .video-iframe {
+          width: 100%;
+          height: 100%;
+          border-radius: 10px;
+          border: none;
+        }
+        
+        /* 笔记区域 */
+        .note-container {
+          width: 100%;
+          flex: 1;
+          padding: 15px;
+          background: #fff;
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+          border-radius: 10px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          overflow-y: auto;
+        }
+        #noteInput {
+          width: 100%;
+          height: 250px;
+          padding: 10px;
+          font-size: 15px;
+          border: 1px solid #ddd;
+          border-radius: 5px;
+          box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+          margin-top: 10px;
+        }
+        /* 限制笔记显示区域 */
+        #noteDisplay {
+          width: 100%;
+          max-height: 150px;
+          overflow-y: auto;
+          margin-top: 10px;
+          word-break: break-word;
+        }
+        
+        /* 右侧字幕文本区域 */
+        .subtitle-container {
+          width: 100%;
+          height: 100%;
+          padding: 15px;
+          background: #fff;
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+          border-radius: 10px;
+          overflow-y: auto;
+        }
+        .subtitle {
+          margin: 10px 0;
+          padding: 12px;
+          line-height: 1.8;
+          font-size: 15px;
+          font-weight: bold;
+          background: #fff;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .color1 {
+          color: #2c3e50;
+        }
+        .color2 {
+          color: #e74c3c;
+        }
+        
+        @media (max-width: 768px) {
+          .container {
+            flex-direction: column;
+          }
+        }
+    </style>
+    <!-- 引入 Mammoth.js 用于 DOCX 解析 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
+</head>
+
+<body>
+    <header>
+        <h1>小野字幕君</h1>
+    </header>
+
+    <div class="container">
+        <!-- 左侧：视频播放和笔记 -->
+        <div class="left-panel">
+            <div class="left-controls">
+                <!-- 在此处增加 datalist 预设选项 -->
+                <input type="text" id="videoUrl" list="videoOptions" placeholder="输入 Bilibili 或 泰剧网链接" class="unified-input" />
+                <datalist id="videoOptions">
+                    <option value="https://i.taijuwang.com/all/6---/"></option>
+                </datalist>
+                <button class="unified-btn" onclick="loadVideo()">播放视频</button>
+            </div>
+            <div class="left-main">
+                <div class="video-container">
+                    <iframe id="videoFrame" class="video-iframe" allowfullscreen></iframe>
+                </div>
+                <div class="note-container">
+                    <textarea id="noteInput" placeholder="在这里记录你的笔记..."></textarea>
+                    <div style="display: flex; gap: 10px; margin-top: 10px;">
+                        <button class="unified-btn" onclick="saveNote()">复制笔记</button>
+                        <button class="unified-btn" onclick="exportNote()">导出笔记</button>
+                    </div>
+                    <div id="noteDisplay"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 右侧：字幕文本 -->
+        <div class="right-panel">
+            <div class="right-controls">
+                <input type="file" id="fileInput" accept=".ass,.srt,.docx" class="unified-input" />
+                <input type="text" id="searchBox" placeholder="搜索字幕..." class="unified-input" oninput="searchSubtitles()" />
+            </div>
+            <div class="right-main">
+                <div class="subtitle-container">
+                    <div id="subtitles"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function loadVideo() {
+          let inputUrl = document.getElementById('videoUrl').value.trim();
+          // 自动添加协议，如果用户未输入则补充
+          if (!/^https?:\/\//i.test(inputUrl)) {
+            inputUrl = 'https://' + inputUrl;
+          }
+          const videoFrame = document.getElementById('videoFrame');
+          try {
+            const url = new URL(inputUrl);
+            if (url.hostname.includes('bilibili.com')) {
+              const bvid = getBilibiliId(inputUrl);
+              if (bvid) {
+                videoFrame.src = `https://player.bilibili.com/player.html?bvid=${bvid}&autoplay=0`;
+                return;
+              }
+            } else if (url.hostname.includes('taijuwang.com')) {
+              videoFrame.src = inputUrl;
+              return;
+            }
+            throw new Error('不支持的平台或链接格式');
+          } catch (e) {
+            alert('⚠️ 错误: 请输入正确的视频链接');
+          }
+        }
+        
+        function getBilibiliId(url) {
+          const match = url.match(/\/video\/(BV\w+)/);
+          return match ? match[1] : null;
+        }
+        
+        document.getElementById('fileInput').addEventListener('change', function (event) {
+          const file = event.target.files[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = function (e) {
+            try {
+              if (file.name.endsWith('.docx')) {
+                parseDOCX(e.target.result, displaySubtitles);
+              } else {
+                const content = e.target.result;
+                const subtitles = file.name.endsWith('.ass') ? parseASS(content) : parseSRT(content);
+                displaySubtitles(subtitles);
+              }
+            } catch (error) {
+              showError(`解析失败: ${error.message}`);
+            }
+          };
+          reader.onerror = () => showError('文件读取失败');
+          file.name.endsWith('.docx')
+            ? reader.readAsArrayBuffer(file)
+            : reader.readAsText(file, 'utf-8');
+        });
+        
+        function parseASS(content) {
+          return content.split('\n')
+            .filter(line => line.startsWith('Dialogue:'))
+            .map(line => {
+              const parts = line.split(',');
+              return { text: parts.slice(9).join(',').replace(/\\N/g, ' ').replace(/\{.*?\}/g, '') };
+            });
+        }
+        
+        function parseSRT(content) {
+          return content.replace(/\r/g, '')
+            .split(/\n\n+/)
+            .map(block => {
+              const lines = block.split('\n').filter(l => l.trim());
+              return lines.length >= 3 ? { text: lines.slice(2).join(' ') } : null;
+            })
+            .filter(Boolean);
+        }
+        
+        function parseDOCX(arrayBuffer, callback) {
+          mammoth.convertToHtml({ arrayBuffer }).then(result => {
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = result.value;
+            const subtitles = Array.from(tempDiv.querySelectorAll('p'))
+              .filter(p => p.textContent.trim() !== '')
+              .map(p => ({ text: p.textContent.trim() }));
+            callback(subtitles);
+          }).catch(err => showError(`DOCX解析失败: ${err.message}`));
+        }
+        
+        function displaySubtitles(subtitles) {
+          const container = document.getElementById('subtitles');
+          container.innerHTML = subtitles.map((sub, index) => `
+            <div class="subtitle ${index % 2 ? 'color2' : 'color1'}">
+              ${sub.text || '空字幕内容'}
+            </div>
+          `).join('');
+        }
+        
+        function showError(message) {
+          const container = document.getElementById('subtitles');
+          container.innerHTML = `<div class="subtitle color2">❌ ${message}</div>`;
+        }
+        
+        function searchSubtitles() {
+          const query = document.getElementById('searchBox').value.trim().toLowerCase();
+          document.querySelectorAll('.subtitle').forEach(subtitle => {
+            subtitle.style.display = subtitle.textContent.toLowerCase().includes(query) ? 'block' : 'none';
+          });
+        }
+        
+        // 保存笔记：将 noteInput 中的内容复制到剪贴板
+        function saveNote() {
+          const noteText = document.getElementById('noteInput').value.trim();
+          if (!noteText) {
+            alert("请输入笔记内容后再复制！");
+            return;
+          }
+          navigator.clipboard.writeText(noteText)
+            .then(() => {
+              alert("笔记内容已复制到剪贴板！");
+            })
+            .catch((err) => {
+              alert("复制失败，请手动复制！");
+            });
+        }
+        
+        // 导出笔记：将 noteInput 中的内容以纯文本格式导出为 .txt 文件
+        function exportNote() {
+          const noteContent = document.getElementById('noteInput').value.trim();
+          if (!noteContent) {
+            alert("没有笔记内容可导出！");
+            return;
+          }
+          const blob = new Blob([noteContent], { type: 'text/plain;charset=utf-8' });
+          const a = document.createElement("a");
+          a.href = URL.createObjectURL(blob);
+          a.download = "note.txt";
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(a.href);
+        }
+    </script>
+
+    <footer style="margin-top: 5px; padding: 10px; text-align: center; font-size: 14px; color: #555;">
+        网页版权来自闲鱼号：青空
+    </footer>
+</body>
+
+</html>
