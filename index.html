@@ -1,368 +1,424 @@
 <!DOCTYPE html>
-<html lang="zh">
-
+<html lang="zh-TW">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>小野字幕君</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小野日語平假名轉換工具</title>
     <style>
-        /* 全局 box-sizing */
         * {
-          box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', sans-serif;
         }
         
-        /* Header 采用浅灰色渐变和日式字体 */
-         header {
-          width: 100%;
-          padding: 20px 0;
-          background: linear-gradient(to right, #ffefba, #faf4e4);
-          border-bottom: 3px solid #d32f2f;
-          text-align: center;
-          font-family: "Yu Mincho", "Hiragino Mincho Pro", serif, Arial, sans-serif;
-          margin-bottom: 20px;
-        }
-        header h1 {
-          margin: 0;
-          font-size: 2.5rem;
-          color: #333;
-          letter-spacing: 2px;
-        }
-        
-        /* 整体页面背景设置为浅灰色 */
         body {
-          background-color: #f5f5f5;
-          margin: 20px;
-          font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #333;
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 20px;
         }
         
-        /* 统一按钮和输入框样式：采用中性浅灰边框和白底 */
-        .unified-btn, .unified-input {
-          width: 100%;
-          max-width: 600px;
-          padding: 10px;
-          font-size: 15px;
-          border: 1px solid #ddd;
-          background: #fff;
-          color: #333;
-          border-radius: 5px;
-          box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
-          cursor: pointer;
-          transition: background 0.3s, color 0.3s;
-        }
-        .unified-btn:hover {
-          background: #e0e0e0;
-          color: #333;
-        }
-        
-        /* 整体容器：左右两侧并列 */
         .container {
-          display: flex;
-          width: 90%;
-          max-width: 1200px;
-          margin: 0 auto;
-          gap: 20px;
-        }
-        .left-panel,
-        .right-panel {
-          flex: 1;
-          display: flex;
-          flex-direction: column;
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
         }
         
-        /* 控制区域：固定高度、内容居中 */
-        .left-controls,
-        .right-controls {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          gap: 5px;
-          height: 100px;
+        header {
+            background: linear-gradient(to right, #2c3e50, #4a6491);
+            color: white;
+            padding: 20px;
+            text-align: center;
         }
         
-        /* 主内容区域（视频、笔记、字幕）的高度保持一致 */
-        .left-main,
-        .right-main {
-          height: 600px;
-          display: flex;
-          flex-direction: column;
-          gap: 20px;
-        }
-        /* 左侧主区域分为视频播放器和笔记区域 */
-        .left-main .video-container,
-        .left-main .note-container {
-          flex: 1;
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
         }
         
-        /* 视频播放器区 */
-        .video-container {
-          width: 100%;
-          height: 100%;
-          overflow: hidden;
-          border-radius: 10px;
-        }
-        .video-iframe {
-          width: 100%;
-          height: 100%;
-          border-radius: 10px;
-          border: none;
-        }
-        
-        /* 笔记区域 */
-        .note-container {
-          width: 100%;
-          flex: 1;
-          padding: 15px;
-          background: #fff;
-          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-          border-radius: 10px;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          overflow-y: auto;
-        }
-        #noteInput {
-          width: 100%;
-          height: 250px;
-          padding: 10px;
-          font-size: 15px;
-          border: 1px solid #ddd;
-          border-radius: 5px;
-          box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
-          margin-top: 10px;
-        }
-        /* 限制笔记显示区域 */
-        #noteDisplay {
-          width: 100%;
-          max-height: 150px;
-          overflow-y: auto;
-          margin-top: 10px;
-          word-break: break-word;
-        }
-        
-        /* 右侧字幕文本区域 */
-        .subtitle-container {
-          width: 100%;
-          height: 100%;
-          padding: 15px;
-          background: #fff;
-          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-          border-radius: 10px;
-          overflow-y: auto;
-        }
-        .subtitle {
-          margin: 10px 0;
-          padding: 12px;
-          line-height: 1.8;
-          font-size: 15px;
-          font-weight: bold;
-          background: #fff;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-        .color1 {
-          color: #2c3e50;
-        }
-        .color2 {
-          color: #e74c3c;
-        }
-        
-        @media (max-width: 768px) {
-          .container {
+        .content {
+            display: flex;
             flex-direction: column;
-          }
+            padding: 20px;
+        }
+        
+        .input-section, .output-section {
+            padding: 20px;
+            width: 100%;
+        }
+        
+        .input-section {
+            background-color: #f9f9f9;
+            border-radius: 10px 10px 0 0;
+            border-bottom: 2px solid #ddd;
+        }
+        
+        .output-section {
+            background-color: #fff;
+            border-radius: 0 0 10px 10px;
+        }
+        
+        .section-title {
+            font-size: 1.3rem;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #4a6491;
+        }
+        
+        textarea {
+            width: 100%;
+            min-height: 150px;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            resize: vertical;
+            margin-bottom: 15px;
+            line-height: 1.6;
+            font-family: 'MS Gothic', 'Yu Gothic', monospace;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            padding: 10px 20px;
+            background-color: #4a6491;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #2c3e50;
+        }
+        
+        .clear-btn {
+            background-color: #e74c3c;
+        }
+        
+        .clear-btn:hover {
+            background-color: #c0392b;
+        }
+        
+        .image-btn {
+            background-color: #27ae60;
+        }
+        
+        .image-btn:hover {
+            background-color: #219653;
+        }
+        
+        .output-area {
+            min-height: 200px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            background-color: #f9f9f9;
+            font-size: 1.4rem;
+            line-height: 2.2;
+            overflow-wrap: break-word;
+            white-space: pre-wrap;
+            text-align: left;
+        }
+        
+        /* Ruby 樣式 - 平假名在漢字上方，字體小 */
+        ruby {
+            ruby-align: center;
+            margin: 0 1px;
+            font-size: 1.4rem;
+        }
+        
+        rt {
+            font-size: 0.5em;
+            color: #e74c3c;
+            font-weight: bold;
+            text-align: center;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 15px;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            border-top: 1px solid #eee;
+            background-color: #f9f9f9;
+        }
+        
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            display: none;
+        }
+        
+        .status.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .format-info {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+            justify-content: center;
+        }
+        
+        @media (min-width: 768px) {
+            h1 {
+                font-size: 2.5rem;
+            }
+            
+            .content {
+                padding: 30px;
+            }
         }
     </style>
-    <!-- 引入 Mammoth.js 用于 DOCX 解析 -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
 </head>
-
 <body>
-    <header>
-        <h1>小野字幕君</h1>
-    </header>
-
     <div class="container">
-        <!-- 左侧：视频播放和笔记 -->
-        <div class="left-panel">
-            <div class="left-controls">
-                <!-- 在此处增加 datalist 预设选项 -->
-                <input type="text" id="videoUrl" list="videoOptions" placeholder="输入 Bilibili 或 泰剧网链接" class="unified-input" />
-                <datalist id="videoOptions">
-                    <option value="https://i.taijuwang.com/all/6---/"></option>
-                </datalist>
-                <button class="unified-btn" onclick="loadVideo()">播放视频</button>
-            </div>
-            <div class="left-main">
-                <div class="video-container">
-                    <iframe id="videoFrame" class="video-iframe" allowfullscreen></iframe>
+        <header>
+            <h1>小野日語</h1>
+            <p>日語平假名轉換工具</p>
+        </header>
+        
+        <div class="content">
+            <section class="input-section">
+                <h2 class="section-title">輸入日語文本</h2>
+                
+                <div class="format-info">
+                    格式：漢字(平假名)，例如：日本語(にほんご)
                 </div>
-                <div class="note-container">
-                    <textarea id="noteInput" placeholder="在这里记录你的笔记..."></textarea>
-                    <div style="display: flex; gap: 10px; margin-top: 10px;">
-                        <button class="unified-btn" onclick="saveNote()">复制笔记</button>
-                        <button class="unified-btn" onclick="exportNote()">导出笔记</button>
-                    </div>
-                    <div id="noteDisplay"></div>
+                
+                <textarea id="inputText" placeholder="請輸入帶有括號平假名的日語文本...
+"></textarea>
+                
+                <div class="status" id="statusMessage"></div>
+                
+                <div class="controls">
+                    <button id="convertBtn">轉換為平假名注音</button>
+                    <button id="clearBtn" class="clear-btn">清除</button>
                 </div>
-            </div>
+            </section>
+            
+            <section class="output-section">
+                <h2 class="section-title">轉換結果</h2>
+                <div class="output-area" id="outputArea">
+                    轉換結果將顯示在這裡...
+                </div>
+                
+                <div class="action-buttons">
+                    <button id="copyBtn" style="display:none;">複製結果</button>
+                    <button id="imageBtn" class="image-btn" style="display:none;">生成高清圖片</button>
+                </div>
+            </section>
         </div>
-
-        <!-- 右侧：字幕文本 -->
-        <div class="right-panel">
-            <div class="right-controls">
-                <input type="file" id="fileInput" accept=".ass,.srt,.docx" class="unified-input" />
-                <input type="text" id="searchBox" placeholder="搜索字幕..." class="unified-input" oninput="searchSubtitles()" />
-            </div>
-            <div class="right-main">
-                <div class="subtitle-container">
-                    <div id="subtitles"></div>
-                </div>
-            </div>
-        </div>
+        
+        <footer>
+            <p>©小野</p>
+            <p>https://www.ezlang.net/zh-Hant/tool/kana</p>
+        </footer>
     </div>
 
+    <!-- html2canvas 庫 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
     <script>
-        function loadVideo() {
-          let inputUrl = document.getElementById('videoUrl').value.trim();
-          // 自动添加协议，如果用户未输入则补充
-          if (!/^https?:\/\//i.test(inputUrl)) {
-            inputUrl = 'https://' + inputUrl;
-          }
-          const videoFrame = document.getElementById('videoFrame');
-          try {
-            const url = new URL(inputUrl);
-            if (url.hostname.includes('bilibili.com')) {
-              const bvid = getBilibiliId(inputUrl);
-              if (bvid) {
-                videoFrame.src = `https://player.bilibili.com/player.html?bvid=${bvid}&autoplay=0`;
+        // DOM元素
+        const inputText = document.getElementById('inputText');
+        const convertBtn = document.getElementById('convertBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const outputArea = document.getElementById('outputArea');
+        const statusMessage = document.getElementById('statusMessage');
+        const copyBtn = document.getElementById('copyBtn');
+        const imageBtn = document.getElementById('imageBtn');
+        
+        // 顯示狀態訊息
+        function showStatus(message, isError = false) {
+            statusMessage.textContent = message;
+            statusMessage.className = 'status ' + (isError ? 'error' : 'success');
+            statusMessage.style.display = 'block';
+            
+            setTimeout(() => {
+                statusMessage.style.display = 'none';
+            }, 3000);
+        }
+        
+        // 改進的轉換函數，修正雙括號問題
+        function convertToRuby(text) {
+            // 分割成多行處理
+            const lines = text.split('\n');
+            const resultLines = [];
+            
+            for (let line of lines) {
+                let resultLine = line;
+                
+                // 使用正則表達式找到所有 (平假名) 的模式
+                // 這個正則表達式會匹配漢字後面跟著的括號
+                const regex = /([\u4E00-\u9FFF\u3400-\u4DBF]+)(?=\s*\(([^()]+)\))/g;
+                
+                // 儲存替換的位置，從後往前替換以避免位置偏移
+                const replacements = [];
+                
+                let match;
+                while ((match = regex.exec(line)) !== null) {
+                    const kanji = match[1];
+                    const furigana = match[2];
+                    const start = match.index;
+                    const end = regex.lastIndex;
+                    
+                    // 找到完整的括號位置
+                    const openParenIndex = line.indexOf('(', start);
+                    const closeParenIndex = line.indexOf(')', openParenIndex);
+                    
+                    replacements.push({
+                        kanji,
+                        furigana,
+                        kanjiStart: start,
+                        kanjiEnd: start + kanji.length,
+                        parenStart: openParenIndex,
+                        parenEnd: closeParenIndex + 1
+                    });
+                }
+                
+                // 從後往前進行替換
+                replacements.sort((a, b) => b.parenStart - a.parenStart);
+                
+                let newLine = line;
+                for (const replacement of replacements) {
+                    const before = newLine.substring(0, replacement.kanjiStart);
+                    const after = newLine.substring(replacement.parenEnd);
+                    newLine = before + `<ruby>${replacement.kanji}<rt>${replacement.furigana}</rt></ruby>` + after;
+                }
+                
+                // 如果是空行，保留空行
+                if (line.trim() === '') {
+                    resultLines.push('');
+                } else {
+                    resultLines.push(newLine);
+                }
+            }
+            
+            return resultLines.join('<br>');
+        }
+        
+        // 轉換按鈕點擊事件
+        convertBtn.addEventListener('click', function() {
+            const text = inputText.value.trim();
+            
+            if (!text) {
+                showStatus('請輸入一些日語文本', true);
                 return;
-              }
-            } else if (url.hostname.includes('taijuwang.com')) {
-              videoFrame.src = inputUrl;
-              return;
             }
-            throw new Error('不支持的平台或链接格式');
-          } catch (e) {
-            alert('⚠️ 错误: 请输入正确的视频链接');
-          }
-        }
-        
-        function getBilibiliId(url) {
-          const match = url.match(/\/video\/(BV\w+)/);
-          return match ? match[1] : null;
-        }
-        
-        document.getElementById('fileInput').addEventListener('change', function (event) {
-          const file = event.target.files[0];
-          if (!file) return;
-          const reader = new FileReader();
-          reader.onload = function (e) {
+            
             try {
-              if (file.name.endsWith('.docx')) {
-                parseDOCX(e.target.result, displaySubtitles);
-              } else {
-                const content = e.target.result;
-                const subtitles = file.name.endsWith('.ass') ? parseASS(content) : parseSRT(content);
-                displaySubtitles(subtitles);
-              }
+                const result = convertToRuby(text);
+                outputArea.innerHTML = result;
+                showStatus('轉換成功！');
+                copyBtn.style.display = 'block';
+                imageBtn.style.display = 'block';
             } catch (error) {
-              showError(`解析失败: ${error.message}`);
+                console.error('轉換錯誤:', error);
+                showStatus('轉換失敗，請檢查輸入格式', true);
             }
-          };
-          reader.onerror = () => showError('文件读取失败');
-          file.name.endsWith('.docx')
-            ? reader.readAsArrayBuffer(file)
-            : reader.readAsText(file, 'utf-8');
         });
         
-        function parseASS(content) {
-          return content.split('\n')
-            .filter(line => line.startsWith('Dialogue:'))
-            .map(line => {
-              const parts = line.split(',');
-              return { text: parts.slice(9).join(',').replace(/\\N/g, ' ').replace(/\{.*?\}/g, '') };
+        // 清除按鈕點擊事件
+        clearBtn.addEventListener('click', function() {
+            inputText.value = '';
+            outputArea.innerHTML = '轉換結果將顯示在這裡...';
+            copyBtn.style.display = 'none';
+            imageBtn.style.display = 'none';
+            showStatus('已清除');
+        });
+        
+        // 複製結果
+        copyBtn.addEventListener('click', function() {
+            const textToCopy = outputArea.innerHTML;
+            
+            // 創建臨時textarea來複製文本
+            const textArea = document.createElement('textarea');
+            textArea.value = textToCopy.replace(/<br>/g, '\n').replace(/<[^>]*>/g, '');
+            document.body.appendChild(textArea);
+            textArea.select();
+            
+            try {
+                document.execCommand('copy');
+                showStatus('已複製到剪貼簿！');
+            } catch (error) {
+                console.error('複製失敗:', error);
+                showStatus('複製失敗', true);
+            }
+            
+            document.body.removeChild(textArea);
+        });
+        
+        // 生成高清圖片
+        imageBtn.addEventListener('click', function() {
+            // 顯示生成中訊息
+            showStatus('圖片生成中，請稍候...');
+            
+            // 獲取輸出區域
+            const element = outputArea;
+            
+            // 設置更高的縮放比例以獲得高清圖片
+            const scale = 3; // 3倍縮放
+            
+            // 使用html2canvas將輸出區域轉換為canvas
+            html2canvas(element, {
+                scale: scale,
+                backgroundColor: '#f9f9f9',
+                useCORS: true,
+                allowTaint: true,
+                logging: false
+            }).then(canvas => {
+                // 將canvas轉換為圖片URL
+                const imageUrl = canvas.toDataURL('image/png');
+                
+                // 創建下載連結
+                const link = document.createElement('a');
+                link.href = imageUrl;
+                link.download = '日語平假名轉換_' + new Date().getTime() + '.png';
+                
+                // 模擬點擊下載
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                showStatus('高清圖片已生成並下載！');
+            }).catch(error => {
+                console.error('圖片生成失敗:', error);
+                showStatus('圖片生成失敗，請重試', true);
             });
-        }
-        
-        function parseSRT(content) {
-          return content.replace(/\r/g, '')
-            .split(/\n\n+/)
-            .map(block => {
-              const lines = block.split('\n').filter(l => l.trim());
-              return lines.length >= 3 ? { text: lines.slice(2).join(' ') } : null;
-            })
-            .filter(Boolean);
-        }
-        
-        function parseDOCX(arrayBuffer, callback) {
-          mammoth.convertToHtml({ arrayBuffer }).then(result => {
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = result.value;
-            const subtitles = Array.from(tempDiv.querySelectorAll('p'))
-              .filter(p => p.textContent.trim() !== '')
-              .map(p => ({ text: p.textContent.trim() }));
-            callback(subtitles);
-          }).catch(err => showError(`DOCX解析失败: ${err.message}`));
-        }
-        
-        function displaySubtitles(subtitles) {
-          const container = document.getElementById('subtitles');
-          container.innerHTML = subtitles.map((sub, index) => `
-            <div class="subtitle ${index % 2 ? 'color2' : 'color1'}">
-              ${sub.text || '空字幕内容'}
-            </div>
-          `).join('');
-        }
-        
-        function showError(message) {
-          const container = document.getElementById('subtitles');
-          container.innerHTML = `<div class="subtitle color2">❌ ${message}</div>`;
-        }
-        
-        function searchSubtitles() {
-          const query = document.getElementById('searchBox').value.trim().toLowerCase();
-          document.querySelectorAll('.subtitle').forEach(subtitle => {
-            subtitle.style.display = subtitle.textContent.toLowerCase().includes(query) ? 'block' : 'none';
-          });
-        }
-        
-        // 保存笔记：将 noteInput 中的内容复制到剪贴板
-        function saveNote() {
-          const noteText = document.getElementById('noteInput').value.trim();
-          if (!noteText) {
-            alert("请输入笔记内容后再复制！");
-            return;
-          }
-          navigator.clipboard.writeText(noteText)
-            .then(() => {
-              alert("笔记内容已复制到剪贴板！");
-            })
-            .catch((err) => {
-              alert("复制失败，请手动复制！");
-            });
-        }
-        
-        // 导出笔记：将 noteInput 中的内容以纯文本格式导出为 .txt 文件
-        function exportNote() {
-          const noteContent = document.getElementById('noteInput').value.trim();
-          if (!noteContent) {
-            alert("没有笔记内容可导出！");
-            return;
-          }
-          const blob = new Blob([noteContent], { type: 'text/plain;charset=utf-8' });
-          const a = document.createElement("a");
-          a.href = URL.createObjectURL(blob);
-          a.download = "note.txt";
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          URL.revokeObjectURL(a.href);
-        }
+        });
     </script>
-
-    <footer style="margin-top: 5px; padding: 10px; text-align: center; font-size: 14px; color: #555;">
-        网页版权归于闲鱼号：青空
-    </footer>
 </body>
-
 </html>
