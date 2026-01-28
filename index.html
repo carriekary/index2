@@ -1,422 +1,1740 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>小野日語平假名轉換工具</title>
+    <title>CityWalk學習頁面 - 簡潔雜誌風格</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;600;700&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet">
+    <!-- 添加日文字體 -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Sawarabi+Gothic&family=Sawarabi+Mincho&display=swap" rel="stylesheet">
     <style>
+        /* 重置樣式 */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Segoe UI', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', sans-serif;
         }
         
         body {
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            background-color: #f8f5f0;
             color: #333;
-            line-height: 1.6;
+            line-height: 1.5;
+            padding: 30px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
             min-height: 100vh;
-            padding: 20px;
+            font-family: 'Noto Sans SC', 'Noto Sans JP', sans-serif; /* 添加日文字體備用 */
+            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23e8e3db' fill-opacity='0.4' fill-rule='evenodd'/%3E%3C/svg%3E");
         }
         
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
+        /* 3:4比例容器 */
+        .magazine-container {
+            width:flex;
+            height: 1200px; /* 3:4比例 (900:1200 = 3:4) */
             background-color: white;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* 裝飾邊框 */
+        .magazine-container::before {
+            content: '';
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            right: 15px;
+            bottom: 15px;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            border-radius: 4px;
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        /* 頁眉區域 - 縮短高度 */
+        .header {
+            padding: 15px 40px 12px; /* 縮短了padding */
+            border-bottom: 1px solid #eaeaea;
+            background: linear-gradient(to right, #f8f8f8, white);
+            position: relative;
             overflow: hidden;
         }
         
-        header {
-            background: linear-gradient(to right, #2c3e50, #4a6491);
-            color: white;
-            padding: 20px;
-            text-align: center;
+        /* 裝飾線條 - 調整位置 */
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 40px;
+            right: 40px;
+            height: 2px; /* 稍微細一點 */
+            background: linear-gradient(to right, #3498db, #e74c3c);
+            border-radius: 2px;
         }
         
-        h1 {
-            font-size: 2rem;
-            margin-bottom: 10px;
+        .title-section h1 {
+            color: #2c3e50;
+            font-size: 24px; /* 稍微減小字號 */
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px; /* 減小間距 */
+            min-height: 32px; /* 減小高度 */
+            outline: none;
+            padding: 4px; /* 減小padding */
+            border-radius: 4px;
+            font-family: 'Noto Serif SC', 'Sawarabi Mincho', serif; /* 添加日文字體備用 */
+            letter-spacing: -0.3px; /* 調整字間距 */
         }
         
-        .content {
+        .title-section h1:focus {
+            background-color: rgba(52, 152, 219, 0.1);
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+        
+        .title-section h1 i {
+            color: #3498db;
+            flex-shrink: 0;
+            font-size: 24px; /* 調整圖標大小 */
+        }
+        
+        /* 主要內容區域 */
+        .main-content {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+        
+        /* 左側區域 - 學習內容區 */
+        .left-column {
+            flex: 1;
+            padding: 20px 40px; /* 調整padding */
+            border-right: 1px solid #eaeaea;
             display: flex;
             flex-direction: column;
-            padding: 20px;
+            overflow: hidden;
         }
         
-        .input-section, .output-section {
-            padding: 20px;
-            width: 100%;
-        }
-        
-        .input-section {
-            background-color: #f9f9f9;
-            border-radius: 10px 10px 0 0;
-            border-bottom: 2px solid #ddd;
-        }
-        
-        .output-section {
-            background-color: #fff;
-            border-radius: 0 0 10px 10px;
-        }
-        
-        .section-title {
-            font-size: 1.3rem;
-            color: #2c3e50;
-            margin-bottom: 15px;
-            padding-bottom: 8px;
-            border-bottom: 2px solid #4a6491;
-        }
-        
-        textarea {
-            width: 100%;
-            min-height: 150px;
-            padding: 15px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            font-size: 1.1rem;
-            resize: vertical;
-            margin-bottom: 15px;
-            line-height: 1.6;
-            font-family: 'MS Gothic', 'Yu Gothic', monospace;
-        }
-        
-        .controls {
+        /* 學習內容區 */
+        .text-section {
+            flex: 1;
             display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
+            flex-direction: column;
+            overflow: hidden;
+            margin-bottom: 20px; /* 減小間距 */
+        }
+        
+        /* 文字高亮工具欄 */
+        .highlight-toolbar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+            padding: 8px 12px;
+            background-color: #f8f9fa;
+            border-radius: 6px;
+            border: 1px solid #eaeaea;
+            align-items: center;
             flex-wrap: wrap;
         }
         
-        button {
-            padding: 10px 20px;
-            background-color: #4a6491;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 1rem;
+        .highlight-toolbar label {
+            font-size: 12px;
+            color: #555;
             font-weight: 600;
-            transition: background-color 0.3s;
+            margin-right: 4px;
+            font-family: 'Noto Sans SC', 'Noto Sans JP', sans-serif;
         }
         
-        button:hover {
-            background-color: #2c3e50;
+        .highlight-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-family: 'Noto Sans SC', 'Noto Sans JP', sans-serif;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
         
-        .clear-btn {
-            background-color: #e74c3c;
+        .highlight-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
         }
         
-        .clear-btn:hover {
-            background-color: #c0392b;
+        .highlight-btn-yellow {
+            background-color: #fff9c4;
+            color: #5d4037;
+            border: 1px solid #ffeb3b;
         }
         
-        .image-btn {
-            background-color: #27ae60;
+        .highlight-btn-blue {
+            background-color: #e3f2fd;
+            color: #1565c0;
+            border: 1px solid #2196f3;
         }
         
-        .image-btn:hover {
-            background-color: #219653;
+        .highlight-btn-green {
+            background-color: #e8f5e8;
+            color: #2e7d32;
+            border: 1px solid #4caf50;
         }
         
-        .output-area {
-            min-height: 200px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            padding: 20px;
-            background-color: #f9f9f9;
-            font-size: 1.4rem;
-            line-height: 2.2;
-            overflow-wrap: break-word;
-            white-space: pre-wrap;
-            text-align: left;
+        .highlight-btn-pink {
+            background-color: #fce4ec;
+            color: #ad1457;
+            border: 1px solid #e91e63;
         }
         
-        /* Ruby 樣式 - 平假名在漢字上方，字體小 */
+        .highlight-btn-orange {
+            background-color: #fff3e0;
+            color: #ef6c00;
+            border: 1px solid #ff9800;
+        }
+        
+        .highlight-btn-clear {
+            background-color: #f5f5f5;
+            color: #616161;
+            border: 1px solid #9e9e9e;
+        }
+        
+        .text-content {
+            padding: 18px; /* 調整padding */
+            background-color: #fdfdfd;
+            border-radius: 6px;
+            border-left: 4px solid #3498db;
+            line-height: 1.6;
+            font-size: 14px;
+            flex: 1;
+            min-height: 280px; /* 稍微調整高度 */
+            outline: none;
+            cursor: text;
+            overflow-y: auto;
+            font-family: 'Noto Sans SC', 'Noto Sans JP', sans-serif;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+        
+        /* 文字高亮樣式 */
+        .highlight-yellow {
+            background-color: #fff9c4 !important;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        
+        .highlight-blue {
+            background-color: #e3f2fd !important;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        
+        .highlight-green {
+            background-color: #e8f5e8 !important;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        
+        .highlight-pink {
+            background-color: #fce4ec !important;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        
+        .highlight-orange {
+            background-color: #fff3e0 !important;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        
+        /* 日文顯示大小 - 使用更適合日文的字體 */
+        .japanese-result {
+            font-size: 1.3rem; /* 稍微增大字號 */
+            line-height: 2.0;
+            font-family: 'Noto Sans JP', 'Sawarabi Gothic', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', sans-serif;
+            font-weight: 400;
+            letter-spacing: 0.05em; /* 日文字體通常需要一點字間距 */
+        }
+        
+        .text-content[contenteditable="true"]:empty:before {
+            content: "點擊這裡開始編輯...";
+            color: #aaa;
+            font-style: italic;
+        }
+        
+        .text-content:focus {
+            background-color: #fff;
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+        
+        .text-content p {
+            margin-bottom: 10px;
+            min-height: 20px;
+            outline: none;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        
+        .text-content p:focus {
+            background-color: rgba(52, 152, 219, 0.1);
+        }
+        
+        .english-text {
+            color: #2c3e50;
+            font-style: italic;
+        }
+        
+        .chinese-text {
+            color: #444;
+            border-top: 1px solid #eaeaea;
+            padding-top: 10px; /* 調整padding */
+        }
+        
+        /* Ruby 樣式 - 平假名在漢字上方 */
         ruby {
             ruby-align: center;
             margin: 0 1px;
-            font-size: 1.4rem;
+            font-size: 1.3rem; /* 增大字號 */
+            font-family: 'Noto Sans JP', 'Sawarabi Gothic', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', sans-serif;
         }
         
         rt {
-            font-size: 0.5em;
+            font-size: 0.55em; /* 稍微增大 */
             color: #e74c3c;
             font-weight: bold;
             text-align: center;
+            font-family: 'Noto Sans JP', 'Sawarabi Gothic', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', sans-serif;
+            letter-spacing: 0.1em;
         }
         
-        footer {
-            text-align: center;
-            padding: 15px;
+        /* 日語平假名轉換區 */
+        .japanese-section {
+            margin-top: 18px; /* 調整間距 */
+            padding: 18px; /* 調整padding */
+            background-color: #fdfdfd;
+            border-radius: 6px;
+            border: 1px solid #eaeaea;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+        
+        .japanese-section h2 {
+            color: #2c3e50;
+            font-size: 16px; /* 調整字號 */
+            margin-bottom: 14px; /* 調整間距 */
+            display: flex;
+            align-items: center;
+            gap: 8px; /* 調整間距 */
+            font-family: 'Noto Serif SC', 'Sawarabi Mincho', serif;
+            font-weight: 600;
+        }
+        
+        .japanese-section h2 i {
+            color: #e74c3c;
+        }
+        
+        .format-info {
+            font-size: 12px;
             color: #7f8c8d;
-            font-size: 0.9rem;
-            border-top: 1px solid #eee;
-            background-color: #f9f9f9;
+            margin-bottom: 14px; /* 調整間距 */
+            padding: 7px 10px; /* 調整padding */
+            background-color: #fff;
+            border-radius: 5px;
+            border-left: 3px solid #e74c3c;
+            font-family: 'Noto Sans SC', 'Noto Sans JP', sans-serif;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+        
+        .japanese-input {
+            width: 100%;
+            min-height: 75px; /* 調整高度 */
+            padding: 11px; /* 調整padding */
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 15px; /* 增大字號 */
+            resize: vertical;
+            margin-bottom: 14px; /* 調整間距 */
+            line-height: 1.6;
+            font-family: 'Noto Sans JP', 'Sawarabi Gothic', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', 'MS Gothic', monospace;
+            background-color: #fafafa;
+            letter-spacing: 0.05em;
+        }
+        
+        .japanese-input:focus {
+            border-color: #3498db;
+            background-color: white;
+            outline: none;
+        }
+        
+        .japanese-controls {
+            display: flex;
+            gap: 8px; /* 調整間距 */
+            margin-bottom: 14px; /* 調整間距 */
+            flex-wrap: wrap;
+        }
+        
+        .japanese-btn {
+            padding: 7px 16px; /* 調整padding */
+            background: linear-gradient(to bottom, #4a6491, #3a5479);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px; /* 調整字號 */
+            font-weight: 600;
+            transition: all 0.2s;
+            font-family: 'Noto Sans SC', 'Noto Sans JP', sans-serif;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .japanese-btn:hover {
+            background: linear-gradient(to bottom, #3a5479, #2c3e50);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+        }
+        
+        .clear-japanese-btn {
+            background: linear-gradient(to bottom, #e74c3c, #c0392b);
+        }
+        
+        .clear-japanese-btn:hover {
+            background: linear-gradient(to bottom, #c0392b, #a93226);
         }
         
         .status {
-            padding: 10px;
+            padding: 9px 11px; /* 調整padding */
             border-radius: 5px;
-            margin-bottom: 15px;
+            margin-bottom: 14px; /* 調整間距 */
             display: none;
+            font-size: 12px; /* 調整字號 */
+            font-family: 'Noto Sans SC', 'Noto Sans JP', sans-serif;
         }
         
         .status.success {
-            background-color: #d4edda;
+            background-color: #f0f9f4;
             color: #155724;
             border: 1px solid #c3e6cb;
         }
         
         .status.error {
-            background-color: #f8d7da;
+            background-color: #fdf3f4;
             color: #721c24;
             border: 1px solid #f5c6cb;
         }
         
-        .format-info {
-            font-size: 0.9rem;
-            color: #666;
+        /* 右側區域 - 調整視頻框位置 */
+        .right-column {
+            width: 350px;
+            padding: 15px 40px 25px; /* 頂部padding減小，視頻框上移 */
+            background-color: #fafafa;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border-left: 1px solid #f0f0f0;
+        }
+        
+        /* 視頻區 - 調整間距 */
+        .video-section {
+            margin-bottom: 20px; /* 調整間距 */
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+        }
+        
+        .video-header {
+            padding: 0;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+        }
+        
+        .video-upload-btn {
+            background: linear-gradient(to bottom, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-family: 'Noto Sans SC', 'Noto Sans JP', sans-serif;
             margin-bottom: 10px;
         }
         
-        .action-buttons {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            margin-top: 20px;
-            justify-content: center;
+        .video-upload-btn:hover {
+            background: linear-gradient(to bottom, #2980b9, #1f6394);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
         
-        @media (min-width: 768px) {
-            h1 {
-                font-size: 2.5rem;
+        .video-container {
+            width: 100%;
+            background-color: #1a1a1a;
+            position: relative;
+        }
+        
+        /* 16:9比例容器 */
+        .video-aspect-ratio {
+            position: relative;
+            width: 100%;
+            padding-top: 56.25%; /* 16:9 比例 (9/16 = 0.5625) */
+            overflow: hidden;
+        }
+        
+        .video-placeholder, .video-preview video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        
+        .video-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #aaa;
+            background-color: #222;
+        }
+        
+        .video-placeholder i {
+            font-size: 36px;
+            margin-bottom: 10px;
+            color: #555;
+        }
+        
+        .video-placeholder p {
+            color: #888;
+            font-size: 13px;
+            margin-top: 8px;
+            font-family: 'Noto Sans SC', 'Noto Sans JP', sans-serif;
+        }
+        
+        .video-preview {
+            display: none;
+        }
+        
+        .upload-area {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            z-index: 10;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .video-container:hover .upload-area {
+            opacity: 1;
+        }
+        
+        .upload-area i {
+            font-size: 36px;
+            margin-bottom: 10px;
+            color: #3498db;
+        }
+        
+        .upload-area p {
+            color: white;
+            margin-bottom: 4px;
+            font-size: 13px;
+            text-align: center;
+            max-width: 80%;
+            font-family: 'Noto Sans SC', 'Noto Sans JP', sans-serif;
+        }
+        
+        .upload-area .file-types {
+            font-size: 11px;
+            color: #aaa;
+            font-family: 'Noto Sans SC', 'Noto Sans JP', sans-serif;
+        }
+        
+        .upload-controls {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        
+        .upload-btn {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: background-color 0.3s;
+            font-family: 'Noto Sans SC', 'Noto Sans JP', sans-serif;
+        }
+        
+        .upload-btn:hover {
+            background-color: #2980b9;
+        }
+        
+        .change-video-btn {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: background-color 0.3s;
+            display: none;
+            font-family: 'Noto Sans SC', 'Noto Sans JP', sans-serif;
+        }
+        
+        .change-video-btn:hover {
+            background-color: #c0392b;
+        }
+        
+        input[type="file"] {
+            display: none;
+        }
+        
+        /* 單詞翻譯區 - 調整間距 */
+        .vocabulary-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .vocabulary-section h2 {
+            color: #2c3e50;
+            font-size: 16px; /* 調整字號 */
+            margin-bottom: 14px; /* 調整間距 */
+            padding-bottom: 7px; /* 調整padding */
+            border-bottom: 2px solid #3498db;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-family: 'Noto Serif SC', 'Sawarabi Mincho', serif;
+            font-weight: 600;
+        }
+        
+        .vocabulary-list-container {
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .vocabulary-list {
+            list-style-type: none;
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 5px;
+            margin-bottom: 14px; /* 調整間距 */
+        }
+        
+        .vocabulary-list::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .vocabulary-list::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 8px;
+        }
+        
+        .vocabulary-list::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 8px;
+        }
+        
+        .vocabulary-item {
+            padding: 11px 13px; /* 調整padding */
+            margin-bottom: 9px; /* 調整間距 */
+            background-color: white;
+            border-radius: 6px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s;
+            border-left: 3px solid #3498db;
+            position: relative;
+        }
+        
+        .vocabulary-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .word {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 14px;
+            margin-bottom: 5px;
+            min-height: 22px;
+            outline: none;
+            padding: 2px 4px;
+            border-radius: 3px;
+            padding-right: 60px;
+            font-family: 'Noto Sans SC', 'Noto Sans JP', sans-serif;
+        }
+        
+        .word:focus {
+            background-color: rgba(52, 152, 219, 0.1);
+        }
+        
+        .translation {
+            color: #555;
+            font-size: 13px;
+            min-height: 20px;
+            outline: none;
+            padding: 2px 4px;
+            border-radius: 3px;
+            padding-right: 60px;
+            font-family: 'Noto Sans SC', 'Noto Sans JP', sans-serif;
+        }
+        
+        .translation:focus {
+            background-color: rgba(52, 152, 219, 0.1);
+        }
+        
+        .type-selector {
+            display: inline-block;
+            background-color: #e8f4fc;
+            color: #3498db;
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-right: 6px;
+            font-weight: 600;
+            border: 1px solid #3498db;
+            outline: none;
+            cursor: pointer;
+            min-width: 50px;
+            font-family: 'Noto Sans SC', 'Noto Sans JP', sans-serif;
+        }
+        
+        /* 頁腳區域 - 稍微調整 */
+        .footer {
+            padding: 12px 40px; /* 調整padding */
+            border-top: 1px solid #eaeaea;
+            background-color: #f9f9f9;
+            text-align: center;
+            color: #7f8c8d;
+            font-size: 11px; /* 調整字號 */
+            font-family: 'Noto Sans SC', 'Noto Sans JP', sans-serif;
+        }
+        
+        .highlight {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        
+        /* 按鈕區域 */
+        .action-buttons {
+            display: flex;
+            gap: 8px; /* 調整間距 */
+            margin-top: 12px; /* 調整間距 */
+            justify-content: flex-end;
+        }
+        
+        .save-btn, .reset-btn {
+            padding: 7px 14px; /* 調整padding */
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-size: 12px; /* 調整字號 */
+            font-weight: 600;
+            transition: all 0.3s;
+            font-family: 'Noto Sans SC', 'Noto Sans JP', sans-serif;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .save-btn {
+            background: linear-gradient(to bottom, #2ecc71, #27ae60);
+            color: white;
+        }
+        
+        .save-btn:hover {
+            background: linear-gradient(to bottom, #27ae60, #219653);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+        }
+        
+        .reset-btn {
+            background: linear-gradient(to bottom, #e74c3c, #c0392b);
+            color: white;
+        }
+        
+        .reset-btn:hover {
+            background: linear-gradient(to bottom, #c0392b, #a93226);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+        }
+        
+        .delete-word-btn {
+            position: absolute;
+            top: 8px; /* 調整位置 */
+            right: 8px; /* 調整位置 */
+            background: rgba(231, 76, 60, 0.1);
+            border: none;
+            color: #e74c3c;
+            cursor: pointer;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            padding: 3px 8px;
+            border-radius: 3px;
+            transition: all 0.2s;
+            font-family: 'Noto Sans SC', 'Noto Sans JP', sans-serif;
+        }
+        
+        .delete-word-btn:hover {
+            background-color: rgba(231, 76, 60, 0.2);
+        }
+        
+        .japanese-result-actions {
+            display: flex;
+            gap: 8px; /* 調整間距 */
+            margin-top: 12px; /* 調整間距 */
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .copy-japanese-btn, .image-japanese-btn {
+            padding: 7px 14px; /* 調整padding */
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-size: 12px; /* 調整字號 */
+            font-weight: 600;
+            transition: all 0.3s;
+            display: none;
+            font-family: 'Noto Sans SC', 'Noto Sans JP', sans-serif;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .copy-japanese-btn {
+            background: linear-gradient(to bottom, #3498db, #2980b9);
+            color: white;
+        }
+        
+        .copy-japanese-btn:hover {
+            background: linear-gradient(to bottom, #2980b9, #1f6394);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+        }
+        
+        .image-japanese-btn {
+            background: linear-gradient(to bottom, #9b59b6, #8e44ad);
+            color: white;
+        }
+        
+        .image-japanese-btn:hover {
+            background: linear-gradient(to bottom, #8e44ad, #7d3c98);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+        }
+        
+        /* 雜誌裝飾元素 */
+        .magazine-decoration {
+            position: absolute;
+            top: 15px; /* 調整位置 */
+            right: 15px; /* 調整位置 */
+            width: 35px; /* 調整大小 */
+            height: 35px; /* 調整大小 */
+            background: linear-gradient(135deg, #3498db, #2ecc71);
+            border-radius: 50%;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 13px; /* 調整字號 */
+            box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
+        }
+        
+        /* 響應式設計 */
+        @media (max-width: 1000px) {
+            .magazine-container {
+                width: 95%;
+                height: auto;
+                min-height: 1200px;
+            }
+        }
+        
+        @media (max-width: 800px) {
+            body {
+                padding: 15px;
             }
             
-            .content {
-                padding: 30px;
+            .magazine-container {
+                width: 100%;
+                height: auto;
+            }
+            
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .right-column {
+                width: 100%;
+                border-top: 1px solid #eaeaea;
+                border-left: none;
+                padding: 15px 40px 25px; /* 保持調整後的padding */
+            }
+            
+            .left-column {
+                border-right: none;
+            }
+            
+            .magazine-decoration {
+                display: none;
+            }
+            
+            .highlight-toolbar {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+        }
+        
+        /* 列印樣式 */
+        @media print {
+            body {
+                background-color: white;
+                padding: 0;
+                margin: 0;
+            }
+            
+            .magazine-container {
+                box-shadow: none;
+                border-radius: 0;
+                width: 100%;
+                height: auto;
+            }
+            
+            .magazine-container::before,
+            .magazine-decoration,
+            .highlight-toolbar {
+                display: none !important;
+            }
+            
+            .japanese-controls,
+            .action-buttons,
+            .japanese-result-actions,
+            .video-upload-btn,
+            .upload-area,
+            .change-video-btn,
+            .delete-word-btn,
+            .edit-notice,
+            .footer {
+                display: none !important;
+            }
+            
+            .text-content,
+            .vocabulary-item {
+                box-shadow: none;
+                border: 1px solid #ddd;
+            }
+            
+            .text-content {
+                background-color: white;
+            }
+            
+            .japanese-section,
+            .video-section {
+                border: 1px solid #ddd;
+            }
+            
+            .video-preview {
+                display: block !important;
+            }
+            
+            .video-placeholder {
+                display: none !important;
+            }
+            
+            /* 確保高亮在列印時可見 */
+            .highlight-yellow {
+                background-color: #fff9c4 !important;
+                -webkit-print-color-adjust: exact !important;
+                color-adjust: exact !important;
+            }
+            
+            .highlight-blue {
+                background-color: #e3f2fd !important;
+                -webkit-print-color-adjust: exact !important;
+                color-adjust: exact !important;
+            }
+            
+            .highlight-green {
+                background-color: #e8f5e8 !important;
+                -webkit-print-color-adjust: exact !important;
+                color-adjust: exact !important;
+            }
+            
+            .highlight-pink {
+                background-color: #fce4ec !important;
+                -webkit-print-color-adjust: exact !important;
+                color-adjust: exact !important;
+            }
+            
+            .highlight-orange {
+                background-color: #fff3e0 !important;
+                -webkit-print-color-adjust: exact !important;
+                color-adjust: exact !important;
             }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>小野日語</h1>
-            <p>日語平假名轉換工具</p>
-        </header>
-        
-        <div class="content">
-            <section class="input-section">
-                <h2 class="section-title">輸入日語文本</h2>
-                
-                <div class="format-info">
-                    格式：漢字(平假名)，例如：日本語(にほんご)
-                </div>
-                
-                <textarea id="inputText" placeholder="請輸入帶有括號平假名的日語文本...
-"></textarea>
-                
-                <div class="status" id="statusMessage"></div>
-                
-                <div class="controls">
-                    <button id="convertBtn">轉換為平假名注音</button>
-                    <button id="clearBtn" class="clear-btn">清除</button>
-                </div>
-            </section>
-            
-            <section class="output-section">
-                <h2 class="section-title">轉換結果</h2>
-                <div class="output-area" id="outputArea">
-                    轉換結果將顯示在這裡...
-                </div>
-                
-                <div class="action-buttons">
-                    <button id="copyBtn" style="display:none;">複製結果</button>
-                    <button id="imageBtn" class="image-btn" style="display:none;">生成高清圖片</button>
-                </div>
-            </section>
+    <!-- 雜誌風格容器 -->
+    <div class="magazine-container">
+        <!-- 裝飾元素 -->
+        <div class="magazine-decoration">
+            <i class="fas fa-book-open"></i>
         </div>
         
-        <footer>
-            <p>©小野</p>
-            <p>https://www.ezlang.net/zh-Hant/tool/kana</p>
-        </footer>
+        <!-- 頁眉區域 -->
+        <div class="header">
+            <div class="title-section">
+                <h1 contenteditable="true"><i class="fas fa-city"></i> 城市漫遊 | CityWalk</h1>
+            </div>
+        </div>
+        
+        <!-- 主要內容區域 -->
+        <div class="main-content">
+            <!-- 左側區域 - 學習內容區 -->
+            <div class="left-column">
+                <!-- 文字區 -->
+                <div class="text-section">
+                    <!-- 高亮工具欄 -->
+                    <div class="highlight-toolbar">
+                        <label>文字高亮：</label>
+                        <button class="highlight-btn highlight-btn-yellow" data-color="yellow">
+                            <i class="fas fa-highlighter"></i> 黃色
+                        </button>
+                        <button class="highlight-btn highlight-btn-blue" data-color="blue">
+                            <i class="fas fa-highlighter"></i> 藍色
+                        </button>
+                        <button class="highlight-btn highlight-btn-green" data-color="green">
+                            <i class="fas fa-highlighter"></i> 綠色
+                        </button>
+                        <button class="highlight-btn highlight-btn-pink" data-color="pink">
+                            <i class="fas fa-highlighter"></i> 粉色
+                        </button>
+                        <button class="highlight-btn highlight-btn-orange" data-color="orange">
+                            <i class="fas fa-highlighter"></i> 橙色
+                        </button>
+                        <button class="highlight-btn highlight-btn-clear" id="clearHighlightBtn">
+                            <i class="fas fa-eraser"></i> 清除高亮
+                        </button>
+                    </div>
+                    
+                    <div class="text-content" id="textContent" contenteditable="true">
+                        <p class="english-text">By "roaming" on foot, Citywalkers get away from internet famous hotspots and commercial hubs, instead seeking out interactions with locals, authentic snacks, and a deeper appreciation for the history and culture of the city.</p>
+                        <p class="chinese-text">通過徒步"漫遊"，城市漫步者遠離網紅熱門景點和商業中心，而是尋求與當地人互動、品嘗正宗小吃，並更深入地了解城市的歷史與文化。</p>
+                        <p style="margin-top: 12px; color: #7f8c8d;"><strong>注意：</strong>不要把<span class="highlight">hotspots</span>看成是<span class="highlight">hot pots</span>。</p>
+                    </div>
+                    
+                    <div class="action-buttons">
+                        <button class="save-btn" id="saveTextBtn">
+                            <i class="fas fa-save"></i> 保存
+                        </button>
+                        <button class="reset-btn" id="resetTextBtn">
+                            <i class="fas fa-undo"></i> 還原
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- 日語平假名轉換區 -->
+                <div class="japanese-section">
+                    <h2><i class="fas fa-language"></i> 日語平假名轉換</h2>
+                    
+                    <div class="format-info">
+                        格式：漢字(平假名)，例如：日本語(にほんご)
+                    </div>
+                    
+                    <textarea class="japanese-input" id="japaneseInput" placeholder="請輸入帶有括號平假名的日語文本..."></textarea>
+                    
+                    <div class="status" id="statusMessage"></div>
+                    
+                    <div class="japanese-controls">
+                        <button class="japanese-btn" id="convertJapaneseBtn">轉換為平假名注音</button>
+                        <button class="japanese-btn clear-japanese-btn" id="clearJapaneseBtn">清除</button>
+                    </div>
+                    
+                    <div class="japanese-result-actions">
+                        <button class="copy-japanese-btn" id="copyJapaneseBtn">複製結果</button>
+                        <button class="image-japanese-btn" id="imageJapaneseBtn">生成高清圖片</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 右側區域 -->
+            <div class="right-column">
+                <!-- 視頻區 - 現在位置更靠上 -->
+                <div class="video-section">
+                    <div class="video-header">
+                        <button class="video-upload-btn" id="openUploadBtn">
+                            <i class="fas fa-upload"></i> 上傳視頻
+                        </button>
+                    </div>
+                    <div class="video-container">
+                        <div class="video-aspect-ratio">
+                            <!-- 視頻占位符 -->
+                            <div class="video-placeholder" id="videoPlaceholder">
+                                <i class="fas fa-video-slash"></i>
+                                <p>暫無視頻</p>
+                            </div>
+                            
+                            <!-- 視頻預覽 -->
+                            <div class="video-preview" id="videoPreview">
+                                <video controls>
+                                    <source src="" type="video/mp4">
+                                    您的瀏覽器不支持視頻播放。
+                                </video>
+                            </div>
+                            
+                            <!-- 上傳區域 -->
+                            <div class="upload-area" id="uploadArea">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <p>點擊選擇或拖放視頻文件到此區域</p>
+                                <p class="file-types">支持 MP4, AVI, MOV 等格式，最大 500MB</p>
+                                <div class="upload-controls">
+                                    <button class="upload-btn" id="selectFileBtn">選擇文件</button>
+                                    <button class="change-video-btn" id="changeVideoBtn">更換視頻</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <input type="file" id="videoUpload" accept="video/*">
+                </div>
+                
+                <!-- 單詞翻譯區 -->
+                <div class="vocabulary-section">
+                    <h2>
+                        <span><i class="fas fa-language"></i> 單詞翻譯</span>
+                        <span class="edit-notice">可編輯</span>
+                    </h2>
+                    
+                    <div class="vocabulary-list-container">
+                        <ul class="vocabulary-list" id="vocabularyList">
+                            <!-- 單詞項將通過JavaScript動態生成，以便於編輯 -->
+                        </ul>
+                        
+                        <div class="action-buttons">
+                            <button class="save-btn" id="addWordBtn">
+                                <i class="fas fa-plus"></i> 添加單詞
+                            </button>
+                            <button class="reset-btn" id="resetWordsBtn">
+                                <i class="fas fa-undo"></i> 重置
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 頁腳區域 -->
+        <div class="footer">
+            <p>城市漫遊學習筆記 &copy; 2023 | 提示：請勿將<span class="highlight">hotspots</span>（熱門景點）誤認為<span class="highlight">hot pots</span>（火鍋）</p>
+        </div>
     </div>
 
     <!-- html2canvas 庫 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     
     <script>
-        // DOM元素
-        const inputText = document.getElementById('inputText');
-        const convertBtn = document.getElementById('convertBtn');
-        const clearBtn = document.getElementById('clearBtn');
-        const outputArea = document.getElementById('outputArea');
-        const statusMessage = document.getElementById('statusMessage');
-        const copyBtn = document.getElementById('copyBtn');
-        const imageBtn = document.getElementById('imageBtn');
-        
-        // 顯示狀態訊息
-        function showStatus(message, isError = false) {
-            statusMessage.textContent = message;
-            statusMessage.className = 'status ' + (isError ? 'error' : 'success');
-            statusMessage.style.display = 'block';
+        document.addEventListener('DOMContentLoaded', function() {
+            // 視頻上傳相關元素
+            const videoPlaceholder = document.getElementById('videoPlaceholder');
+            const videoPreview = document.getElementById('videoPreview');
+            const videoElement = videoPreview.querySelector('video');
+            const videoUpload = document.getElementById('videoUpload');
+            const uploadArea = document.getElementById('uploadArea');
+            const openUploadBtn = document.getElementById('openUploadBtn');
+            const selectFileBtn = document.getElementById('selectFileBtn');
+            const changeVideoBtn = document.getElementById('changeVideoBtn');
             
-            setTimeout(() => {
-                statusMessage.style.display = 'none';
-            }, 3000);
-        }
-        
-        // 改進的轉換函數，修正雙括號問題
-        function convertToRuby(text) {
-            // 分割成多行處理
-            const lines = text.split('\n');
-            const resultLines = [];
+            // 文字編輯相關元素
+            const textContent = document.getElementById('textContent');
+            const saveTextBtn = document.getElementById('saveTextBtn');
+            const resetTextBtn = document.getElementById('resetTextBtn');
+            const originalText = textContent.innerHTML; // 保存原始內容
             
-            for (let line of lines) {
-                let resultLine = line;
+            // 日語轉換相關元素
+            const japaneseInput = document.getElementById('japaneseInput');
+            const convertJapaneseBtn = document.getElementById('convertJapaneseBtn');
+            const clearJapaneseBtn = document.getElementById('clearJapaneseBtn');
+            const statusMessage = document.getElementById('statusMessage');
+            const copyJapaneseBtn = document.getElementById('copyJapaneseBtn');
+            const imageJapaneseBtn = document.getElementById('imageJapaneseBtn');
+            
+            // 單詞翻譯相關元素
+            const vocabularyList = document.getElementById('vocabularyList');
+            const addWordBtn = document.getElementById('addWordBtn');
+            const resetWordsBtn = document.getElementById('resetWordsBtn');
+            
+            // 高亮相關元素
+            const highlightButtons = document.querySelectorAll('.highlight-btn[data-color]');
+            const clearHighlightBtn = document.getElementById('clearHighlightBtn');
+            
+            // 初始單詞數據 - 包含英語和日語單詞
+            const initialVocabulary = [
+                { word: "roaming", type: "v.", translation: "漫步；漫遊" },
+                { word: "hotspots", type: "n.", translation: "熱門景點（注意：不是火鍋 hot pots）" },
+                { word: "commercial hub", type: "n.", translation: "商業中心" },
+                { word: "seek out", type: "phr.", translation: "尋找；找出" },
+                { word: "interaction", type: "n.", translation: "互動；交流" },
+                { word: "authentic snacks", type: "n.", translation: "正宗的小吃" },
+                { word: "a deeper appreciation for", type: "phr.", translation: "對……有更深入的了解" }
+            ];
+            
+            // 保存的單詞數據
+            let vocabularyData = JSON.parse(localStorage.getItem('citywalkVocabulary')) || [...initialVocabulary];
+            
+            // 詞性選項 - 包含英語和日語詞性
+            const wordTypes = [
+                "v.", "n.", "adj.", "adv.", "phr.", "prep.", 
+                "名詞", "動詞", "形容詞", "副詞", "助詞", "接続詞", "感動詞"
+            ];
+            
+            // 顯示狀態訊息
+            function showStatus(message, isError = false) {
+                statusMessage.textContent = message;
+                statusMessage.className = 'status ' + (isError ? 'error' : 'success');
+                statusMessage.style.display = 'block';
                 
-                // 使用正則表達式找到所有 (平假名) 的模式
-                // 這個正則表達式會匹配漢字後面跟著的括號
-                const regex = /([\u4E00-\u9FFF\u3400-\u4DBF]+)(?=\s*\(([^()]+)\))/g;
+                setTimeout(() => {
+                    statusMessage.style.display = 'none';
+                }, 3000);
+            }
+            
+            // 高亮選取的文字
+            function highlightText(color) {
+                const selection = window.getSelection();
                 
-                // 儲存替換的位置，從後往前替換以避免位置偏移
-                const replacements = [];
+                if (selection.isCollapsed) {
+                    showStatus('請先選取要標記的文字', true);
+                    return;
+                }
                 
-                let match;
-                while ((match = regex.exec(line)) !== null) {
-                    const kanji = match[1];
-                    const furigana = match[2];
-                    const start = match.index;
-                    const end = regex.lastIndex;
-                    
-                    // 找到完整的括號位置
-                    const openParenIndex = line.indexOf('(', start);
-                    const closeParenIndex = line.indexOf(')', openParenIndex);
-                    
-                    replacements.push({
-                        kanji,
-                        furigana,
-                        kanjiStart: start,
-                        kanjiEnd: start + kanji.length,
-                        parenStart: openParenIndex,
-                        parenEnd: closeParenIndex + 1
+                const range = selection.getRangeAt(0);
+                const selectedText = range.toString();
+                
+                if (!selectedText.trim()) {
+                    showStatus('請選取有效的文字內容', true);
+                    return;
+                }
+                
+                // 創建高亮元素
+                const highlightElement = document.createElement('span');
+                highlightElement.className = `highlight-${color}`;
+                highlightElement.textContent = selectedText;
+                
+                // 刪除原始選取文字並插入高亮元素
+                range.deleteContents();
+                range.insertNode(highlightElement);
+                
+                // 取消選取狀態
+                selection.removeAllRanges();
+                
+                showStatus(`已使用${getColorName(color)}標記文字`);
+            }
+            
+            // 獲取顏色名稱
+            function getColorName(color) {
+                const colorNames = {
+                    'yellow': '黃色',
+                    'blue': '藍色',
+                    'green': '綠色',
+                    'pink': '粉色',
+                    'orange': '橙色'
+                };
+                return colorNames[color] || color;
+            }
+            
+            // 清除所有高亮
+            function clearAllHighlights() {
+                const highlights = textContent.querySelectorAll('[class^="highlight-"]');
+                
+                if (highlights.length === 0) {
+                    showStatus('沒有找到任何高亮標記', true);
+                    return;
+                }
+                
+                if (confirm(`確定要清除所有高亮標記嗎？共找到 ${highlights.length} 處高亮。`)) {
+                    highlights.forEach(highlight => {
+                        const parent = highlight.parentNode;
+                        parent.replaceChild(document.createTextNode(highlight.textContent), highlight);
+                        parent.normalize(); // 合併相鄰的文字節點
                     });
+                    
+                    showStatus(`已清除 ${highlights.length} 處高亮標記`);
+                }
+            }
+            
+            // 改進的轉換函數，修正雙括號問題
+            function convertToRuby(text) {
+                // 分割成多行處理
+                const lines = text.split('\n');
+                const resultLines = [];
+                
+                for (let line of lines) {
+                    let resultLine = line;
+                    
+                    // 使用正則表達式找到所有 (平假名) 的模式
+                    // 這個正則表達式會匹配漢字後面跟著的括號
+                    const regex = /([\u4E00-\u9FFF\u3400-\u4DBF]+)(?=\s*\(([^()]+)\))/g;
+                    
+                    // 儲存替換的位置，從後往前替換以避免位置偏移
+                    const replacements = [];
+                    
+                    let match;
+                    while ((match = regex.exec(line)) !== null) {
+                        const kanji = match[1];
+                        const furigana = match[2];
+                        const start = match.index;
+                        const end = regex.lastIndex;
+                        
+                        // 找到完整的括號位置
+                        const openParenIndex = line.indexOf('(', start);
+                        const closeParenIndex = line.indexOf(')', openParenIndex);
+                        
+                        replacements.push({
+                            kanji,
+                            furigana,
+                            kanjiStart: start,
+                            kanjiEnd: start + kanji.length,
+                            parenStart: openParenIndex,
+                            parenEnd: closeParenIndex + 1
+                        });
+                    }
+                    
+                    // 從後往前進行替換
+                    replacements.sort((a, b) => b.parenStart - a.parenStart);
+                    
+                    let newLine = line;
+                    for (const replacement of replacements) {
+                        const before = newLine.substring(0, replacement.kanjiStart);
+                        const after = newLine.substring(replacement.parenEnd);
+                        newLine = before + `<ruby>${replacement.kanji}<rt>${replacement.furigana}</rt></ruby>` + after;
+                    }
+                    
+                    // 如果是空行，保留空行
+                    if (line.trim() === '') {
+                        resultLines.push('');
+                    } else {
+                        resultLines.push(newLine);
+                    }
                 }
                 
-                // 從後往前進行替換
-                replacements.sort((a, b) => b.parenStart - a.parenStart);
+                return resultLines.join('<br>');
+            }
+            
+            // 初始化單詞列表
+            function initVocabularyList() {
+                vocabularyList.innerHTML = '';
                 
-                let newLine = line;
-                for (const replacement of replacements) {
-                    const before = newLine.substring(0, replacement.kanjiStart);
-                    const after = newLine.substring(replacement.parenEnd);
-                    newLine = before + `<ruby>${replacement.kanji}<rt>${replacement.furigana}</rt></ruby>` + after;
+                vocabularyData.forEach((item, index) => {
+                    const li = document.createElement('li');
+                    li.className = 'vocabulary-item';
+                    
+                    // 創建詞性選項
+                    let typeOptions = '';
+                    wordTypes.forEach(type => {
+                        typeOptions += `<option value="${type}" ${item.type === type ? 'selected' : ''}>${type}</option>`;
+                    });
+                    
+                    li.innerHTML = `
+                        <div class="word" contenteditable="true" data-index="${index}" data-field="word">${item.word}</div>
+                        <div class="translation" contenteditable="true" data-index="${index}" data-field="translation">${item.translation}</div>
+                        <button class="delete-word-btn" data-index="${index}" title="刪除單詞">
+                            <i class="fas fa-trash-alt"></i> 刪除
+                        </button>
+                        <div class="word-controls">
+                            <select class="type-selector" data-index="${index}">
+                                ${typeOptions}
+                            </select>
+                        </div>
+                    `;
+                    vocabularyList.appendChild(li);
+                });
+                
+                // 為刪除按鈕添加事件監聽
+                document.querySelectorAll('.delete-word-btn').forEach(btn => {
+                    btn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        const index = parseInt(this.getAttribute('data-index'));
+                        if (confirm('確定要刪除這個單詞嗎？')) {
+                            vocabularyData.splice(index, 1);
+                            saveVocabularyData();
+                            initVocabularyList();
+                        }
+                    });
+                });
+                
+                // 為類型選擇器添加事件監聽
+                document.querySelectorAll('.type-selector').forEach(select => {
+                    select.addEventListener('change', function() {
+                        const index = parseInt(this.getAttribute('data-index'));
+                        vocabularyData[index].type = this.value;
+                        saveVocabularyData();
+                    });
+                });
+                
+                // 為可編輯的單詞和翻譯添加輸入事件監聽
+                document.querySelectorAll('.word, .translation').forEach(element => {
+                    element.addEventListener('input', function() {
+                        const index = parseInt(this.getAttribute('data-index'));
+                        const field = this.getAttribute('data-field');
+                        vocabularyData[index][field] = this.textContent;
+                        saveVocabularyData();
+                    });
+                    
+                    element.addEventListener('focus', function() {
+                        this.style.backgroundColor = 'rgba(52, 152, 219, 0.1)';
+                    });
+                    
+                    element.addEventListener('blur', function() {
+                        this.style.backgroundColor = '';
+                    });
+                });
+            }
+            
+            // 保存單詞數據到本地存儲
+            function saveVocabularyData() {
+                localStorage.setItem('citywalkVocabulary', JSON.stringify(vocabularyData));
+            }
+            
+            // 日語轉換按鈕點擊事件
+            convertJapaneseBtn.addEventListener('click', function() {
+                const text = japaneseInput.value.trim();
+                
+                if (!text) {
+                    showStatus('請輸入一些日語文本', true);
+                    return;
                 }
                 
-                // 如果是空行，保留空行
-                if (line.trim() === '') {
-                    resultLines.push('');
+                try {
+                    const result = convertToRuby(text);
+                    // 添加日文結果樣式類
+                    textContent.innerHTML = `<div class="japanese-result">${result}</div>`;
+                    showStatus('轉換成功！已顯示在學習內容區。');
+                    copyJapaneseBtn.style.display = 'inline-block';
+                    imageJapaneseBtn.style.display = 'inline-block';
+                } catch (error) {
+                    console.error('轉換錯誤:', error);
+                    showStatus('轉換失敗，請檢查輸入格式', true);
+                }
+            });
+            
+            // 清除日語輸入
+            clearJapaneseBtn.addEventListener('click', function() {
+                japaneseInput.value = '';
+                showStatus('已清除輸入');
+                copyJapaneseBtn.style.display = 'none';
+                imageJapaneseBtn.style.display = 'none';
+            });
+            
+            // 複製日語結果
+            copyJapaneseBtn.addEventListener('click', function() {
+                const textToCopy = textContent.innerHTML;
+                
+                // 創建臨時textarea來複製文本
+                const textArea = document.createElement('textarea');
+                textArea.value = textToCopy.replace(/<br>/g, '\n').replace(/<[^>]*>/g, '');
+                document.body.appendChild(textArea);
+                textArea.select();
+                
+                try {
+                    document.execCommand('copy');
+                    showStatus('已複製到剪貼簿！');
+                } catch (error) {
+                    console.error('複製失敗:', error);
+                    showStatus('複製失敗', true);
+                }
+                
+                document.body.removeChild(textArea);
+            });
+            
+            // 生成高清日語結果圖片
+            imageJapaneseBtn.addEventListener('click', function() {
+                // 顯示生成中訊息
+                showStatus('圖片生成中，請稍候...');
+                
+                // 獲取輸出區域
+                const element = textContent.querySelector('.japanese-result') || textContent;
+                
+                // 設置更高的縮放比例以獲得高清圖片
+                const scale = 3; // 3倍縮放
+                
+                // 使用html2canvas將輸出區域轉換為canvas
+                html2canvas(element, {
+                    scale: scale,
+                    backgroundColor: '#fdfdfd',
+                    useCORS: true,
+                    allowTaint: true,
+                    logging: false
+                }).then(canvas => {
+                    // 將canvas轉換為圖片URL
+                    const imageUrl = canvas.toDataURL('image/png');
+                    
+                    // 創建下載連結
+                    const link = document.createElement('a');
+                    link.href = imageUrl;
+                    link.download = '日語平假名轉換_' + new Date().getTime() + '.png';
+                    
+                    // 模擬點擊下載
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    
+                    showStatus('高清圖片已生成並下載！');
+                }).catch(error => {
+                    console.error('圖片生成失敗:', error);
+                    showStatus('圖片生成失敗，請重試', true);
+                });
+            });
+            
+            // 高亮按鈕事件
+            highlightButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const color = this.getAttribute('data-color');
+                    highlightText(color);
+                });
+            });
+            
+            // 清除高亮按鈕事件
+            clearHighlightBtn.addEventListener('click', clearAllHighlights);
+            
+            // 打開上傳區域
+            openUploadBtn.addEventListener('click', function() {
+                uploadArea.style.display = 'flex';
+            });
+            
+            // 選擇文件按鈕
+            selectFileBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                videoUpload.click();
+            });
+            
+            // 處理文件選擇
+            videoUpload.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    if (file.type.startsWith('video/')) {
+                        const videoURL = URL.createObjectURL(file);
+                        videoElement.src = videoURL;
+                        
+                        // 顯示視頻預覽，隱藏占位符和上傳區域
+                        videoPreview.style.display = 'block';
+                        videoPlaceholder.style.display = 'none';
+                        uploadArea.style.display = 'none';
+                        changeVideoBtn.style.display = 'block';
+                        
+                        // 保存視頻信息到本地存儲
+                        localStorage.setItem('citywalkVideo', JSON.stringify({
+                            name: file.name,
+                            size: file.size,
+                            type: file.type,
+                            url: videoURL
+                        }));
+                    } else {
+                        alert('請選擇視頻文件（MP4, AVI, MOV等格式）');
+                    }
+                }
+            });
+            
+            // 更換視頻按鈕
+            changeVideoBtn.addEventListener('click', function() {
+                // 顯示上傳區域
+                uploadArea.style.display = 'flex';
+                changeVideoBtn.style.display = 'none';
+                
+                // 清除本地存儲中的視頻信息
+                localStorage.removeItem('citywalkVideo');
+                
+                // 重置視頻元素
+                videoElement.src = '';
+                
+                // 重置文件輸入
+                videoUpload.value = '';
+            });
+            
+            // 拖放功能
+            uploadArea.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                uploadArea.style.backgroundColor = 'rgba(0, 0, 0, 0.85)';
+            });
+            
+            uploadArea.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                uploadArea.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+            });
+            
+            uploadArea.addEventListener('drop', function(e) {
+                e.preventDefault();
+                uploadArea.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+                
+                const file = e.dataTransfer.files[0];
+                if (file && file.type.startsWith('video/')) {
+                    const videoURL = URL.createObjectURL(file);
+                    videoElement.src = videoURL;
+                    
+                    // 顯示視頻預覽，隱藏占位符和上傳區域
+                    videoPreview.style.display = 'block';
+                    videoPlaceholder.style.display = 'none';
+                    uploadArea.style.display = 'none';
+                    changeVideoBtn.style.display = 'block';
+                    
+                    // 保存視頻信息到本地存儲
+                    localStorage.setItem('citywalkVideo', JSON.stringify({
+                        name: file.name,
+                        size: file.size,
+                        type: file.type,
+                        url: videoURL
+                    }));
                 } else {
-                    resultLines.push(newLine);
+                    alert('請拖放視頻文件（MP4, AVI, MOV等格式）');
+                }
+            });
+            
+            // 保存文本編輯內容
+            saveTextBtn.addEventListener('click', function() {
+                // 保存標題區內容
+                const titleText = document.querySelector('.title-section h1').innerHTML;
+                
+                localStorage.setItem('citywalkTitle', titleText);
+                
+                // 保存學習內容（包含高亮）
+                localStorage.setItem('citywalkEditedText', textContent.innerHTML);
+                
+                alert('所有修改已保存到本地存儲！');
+            });
+            
+            // 恢復文本原始內容
+            resetTextBtn.addEventListener('click', function() {
+                if (confirm('確定要恢復原始內容嗎？您所做的修改將會丟失。')) {
+                    // 恢復標題區
+                    document.querySelector('.title-section h1').innerHTML = '<i class="fas fa-city"></i> 城市漫遊 | CityWalk';
+                    
+                    // 恢復學習內容
+                    textContent.innerHTML = originalText;
+                    
+                    // 清除本地存儲
+                    localStorage.removeItem('citywalkTitle');
+                    localStorage.removeItem('citywalkEditedText');
+                    
+                    alert('內容已恢復！');
+                }
+            });
+            
+            // 添加新單詞
+            addWordBtn.addEventListener('click', function() {
+                const newWord = {
+                    word: "新單詞",
+                    type: "n.",
+                    translation: "新單詞的翻譯"
+                };
+                
+                vocabularyData.push(newWord);
+                saveVocabularyData();
+                initVocabularyList();
+                
+                // 滾動到新添加的單詞
+                const lastItem = vocabularyList.lastElementChild;
+                lastItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                
+                // 聚焦到新單詞
+                const wordElement = lastItem.querySelector('.word');
+                wordElement.focus();
+                
+                // 選中所有文本以便直接編輯
+                const selection = window.getSelection();
+                const range = document.createRange();
+                range.selectNodeContents(wordElement);
+                selection.removeAllRanges();
+                selection.addRange(range);
+            });
+            
+            // 重置單詞列表
+            resetWordsBtn.addEventListener('click', function() {
+                if (confirm('確定要重置單詞列表嗎？所有自定義單詞將會丟失。')) {
+                    vocabularyData = [...initialVocabulary];
+                    saveVocabularyData();
+                    initVocabularyList();
+                    alert('單詞列表已重置！');
+                }
+            });
+            
+            // 頁面加載時檢查是否有保存的內容
+            const savedTitle = localStorage.getItem('citywalkTitle');
+            const savedText = localStorage.getItem('citywalkEditedText');
+            const savedVideo = localStorage.getItem('citywalkVideo');
+            
+            // 恢復標題區內容
+            if (savedTitle) {
+                document.querySelector('.title-section h1').innerHTML = savedTitle;
+            }
+            
+            // 恢復學習內容 - 確保textContent是可編輯的
+            if (savedText) {
+                textContent.innerHTML = savedText;
+            }
+            
+            // 確保textContent是可編輯的
+            textContent.setAttribute('contenteditable', 'true');
+            
+            // 恢復視頻
+            if (savedVideo) {
+                try {
+                    const videoData = JSON.parse(savedVideo);
+                    videoElement.src = videoData.url;
+                    
+                    // 顯示視頻預覽，隱藏占位符
+                    videoPreview.style.display = 'block';
+                    videoPlaceholder.style.display = 'none';
+                    changeVideoBtn.style.display = 'block';
+                } catch (e) {
+                    console.error('加載視頻數據失敗:', e);
                 }
             }
             
-            return resultLines.join('<br>');
-        }
-        
-        // 轉換按鈕點擊事件
-        convertBtn.addEventListener('click', function() {
-            const text = inputText.value.trim();
+            // 初始化單詞列表
+            initVocabularyList();
             
-            if (!text) {
-                showStatus('請輸入一些日語文本', true);
-                return;
-            }
-            
-            try {
-                const result = convertToRuby(text);
-                outputArea.innerHTML = result;
-                showStatus('轉換成功！');
-                copyBtn.style.display = 'block';
-                imageBtn.style.display = 'block';
-            } catch (error) {
-                console.error('轉換錯誤:', error);
-                showStatus('轉換失敗，請檢查輸入格式', true);
-            }
-        });
-        
-        // 清除按鈕點擊事件
-        clearBtn.addEventListener('click', function() {
-            inputText.value = '';
-            outputArea.innerHTML = '轉換結果將顯示在這裡...';
-            copyBtn.style.display = 'none';
-            imageBtn.style.display = 'none';
-            showStatus('已清除');
-        });
-        
-        // 複製結果
-        copyBtn.addEventListener('click', function() {
-            const textToCopy = outputArea.innerHTML;
-            
-            // 創建臨時textarea來複製文本
-            const textArea = document.createElement('textarea');
-            textArea.value = textToCopy.replace(/<br>/g, '\n').replace(/<[^>]*>/g, '');
-            document.body.appendChild(textArea);
-            textArea.select();
-            
-            try {
-                document.execCommand('copy');
-                showStatus('已複製到剪貼簿！');
-            } catch (error) {
-                console.error('複製失敗:', error);
-                showStatus('複製失敗', true);
-            }
-            
-            document.body.removeChild(textArea);
-        });
-        
-        // 生成高清圖片
-        imageBtn.addEventListener('click', function() {
-            // 顯示生成中訊息
-            showStatus('圖片生成中，請稍候...');
-            
-            // 獲取輸出區域
-            const element = outputArea;
-            
-            // 設置更高的縮放比例以獲得高清圖片
-            const scale = 3; // 3倍縮放
-            
-            // 使用html2canvas將輸出區域轉換為canvas
-            html2canvas(element, {
-                scale: scale,
-                backgroundColor: '#f9f9f9',
-                useCORS: true,
-                allowTaint: true,
-                logging: false
-            }).then(canvas => {
-                // 將canvas轉換為圖片URL
-                const imageUrl = canvas.toDataURL('image/png');
+            // 為可編輯元素添加聚焦樣式
+            document.querySelectorAll('[contenteditable="true"]').forEach(element => {
+                element.addEventListener('focus', function() {
+                    this.style.backgroundColor = 'rgba(52, 152, 219, 0.1)';
+                });
                 
-                // 創建下載連結
-                const link = document.createElement('a');
-                link.href = imageUrl;
-                link.download = '日語平假名轉換_' + new Date().getTime() + '.png';
-                
-                // 模擬點擊下載
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                
-                showStatus('高清圖片已生成並下載！');
-            }).catch(error => {
-                console.error('圖片生成失敗:', error);
-                showStatus('圖片生成失敗，請重試', true);
+                element.addEventListener('blur', function() {
+                    this.style.backgroundColor = '';
+                });
+            });
+            
+            // 特別確保學習內容區可以編輯
+            textContent.addEventListener('click', function() {
+                this.focus();
             });
         });
     </script>
