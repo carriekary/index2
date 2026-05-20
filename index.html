@@ -251,6 +251,61 @@
             white-space: pre-wrap;
             word-break: break-word;
           }
+        }/* ==================== 手機版響應式設計 (RWD) ==================== */
+        @media (max-width: 900px) {
+          :root {
+            --header-height: auto;
+            --container-padding: 15px;
+          }
+          
+          /* 導航列改為彈性堆疊 */
+          .header {
+            position: relative;
+            flex-direction: column;
+            align-items: flex-start;
+            padding: 20px;
+            gap: 15px;
+          }
+          .file-search-container {
+            flex-direction: column;
+            align-items: stretch;
+            width: 100%;
+          }
+          .search-box { width: 100%; }
+          
+          main { padding-top: 20px; }
+          
+          /* 核心修復：雙欄改為上下堆疊 */
+          .subtitle {
+            flex-direction: column;
+            padding: 15px;
+          }
+          
+          /* 文字區調整 */
+          .text-box {
+            padding: 0 0 15px 0;
+            border-right: none; /* 移除原本的右側垂直分隔線 */
+            border-bottom: 2px dashed #93c5fd; /* 改為底部水平分隔線 */
+          }
+          
+          /* 筆記區調整 */
+          .note-area {
+            padding: 15px 0 0 0;
+          }
+          
+          /* 底部按鈕並排滿版 */
+          .button-container {
+            bottom: 15px;
+            right: 15px;
+            left: 15px;
+            justify-content: space-between;
+          }
+          .import-btn, .export-btn, .export-pdf-btn {
+            flex: 1;
+            padding: 12px 10px;
+            font-size: 13px;
+            text-align: center;
+          }
         }
     </style>
 </head>
