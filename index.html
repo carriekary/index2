@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>小野字幕君</title>
+    <title>小野字幕君 - 淺藍講義版</title>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
 
@@ -12,13 +12,16 @@
 
     <style>
         :root {
-          --header-height: 80px; /* 縮小一點標頭高度 */
-          --accent: #d35400; /* 改為更有質感的橘紅色，對應 TED 風格 */
+          --header-height: 80px;
+          --accent: #3b82f6; /* 主題淺藍 */
+          --accent-dark: #0284c7; /* 深一點的藍色，用於標題 */
+          --accent-light: #eff6ff; /* 極淡的藍色，用於筆記框焦點 */
+          --bg-color: #f4f9fd; /* 清爽的淡藍灰色背景 */
+          --border-color: #bfdbfe; /* 藍色邊框 */
+          
           --subtitle-min-height: 30px;
           --gutter: 20px;
-          
-          /* 【關鍵修改】限制最大寬度，解決「行寬太大」的問題，這也是最佳的閱讀寬度 */
-          --max-width: 960px; 
+          --max-width: 960px; /* 最佳閱讀行寬 */
           --container-padding: 30px;
         }
         
@@ -30,9 +33,9 @@
           height: 100%;
           margin: 0;
           padding: 0;
-          font-family: "Georgia", "Times New Roman", "Noto Serif CJK TC", "Noto Serif CJK JP", serif; /* 改為更具書卷氣息的襯線字體 */
-          background: #fdfdfd; /* 乾淨的紙張白 */
-          color: #222;
+          font-family: "Georgia", "Times New Roman", "Noto Serif CJK TC", "Noto Serif CJK JP", serif; 
+          background: var(--bg-color); 
+          color: #1e293b;
         }
         
         /* 頂部導航 */
@@ -45,27 +48,46 @@
           justify-content: space-between;
           padding: 0 40px;
           background: #ffffff;
-          color: #333;
           z-index: 999;
-          border-bottom: 1px solid #eaeaea;
-          box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+          border-bottom: 1px solid var(--border-color);
+          box-shadow: 0 4px 12px rgba(59, 130, 246, 0.05);
         }
         
-        .header-left h1 { margin: 0; font-size: 24px; color: var(--accent); font-family: "Arial", sans-serif; font-weight: 800; letter-spacing: 1px; }
-        .header-left p { margin: 4px 0 0 0; font-size: 12px; color: #888; font-family: sans-serif; }
+        .header-left h1 { 
+            margin: 0; 
+            font-size: 24px; 
+            color: var(--accent-dark); 
+            font-family: "Arial", sans-serif; 
+            font-weight: 800; 
+            letter-spacing: 1px; 
+        }
+        .header-left p { 
+            margin: 4px 0 0 0; 
+            font-size: 12px; 
+            color: #64748b; 
+            font-family: sans-serif; 
+        }
         
         .file-search-container { display: flex; gap: 12px; align-items: center; }
-        .search-box { padding: 8px 12px; border-radius: 4px; border: 1px solid #ccc; font-size: 13px; width: 220px; outline: none; }
-        .search-box:focus { border-color: var(--accent); }
+        .search-box { 
+            padding: 8px 12px; 
+            border-radius: 4px; 
+            border: 1px solid #cbd5e1; 
+            font-size: 13px; 
+            width: 220px; 
+            outline: none; 
+            background: #ffffff;
+        }
+        .search-box:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2); }
         
         input[type="file"]::file-selector-button {
-          padding: 8px 16px; border-radius: 4px; border: 1px solid #ccc;
-          background: #fff; color: #333; font-size: 13px; cursor: pointer; transition: 0.2s;
+          padding: 8px 16px; border-radius: 4px; border: 1px solid #cbd5e1;
+          background: #ffffff; color: #475569; font-size: 13px; cursor: pointer; transition: 0.2s;
         }
-        input[type="file"]::file-selector-button:hover { background: #f5f5f5; }
+        input[type="file"]::file-selector-button:hover { background: var(--accent-light); border-color: var(--border-color); }
         
-        .bilingual-btn { background: #f1f1f1; color: #333; border: 1px solid #ccc; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 13px; }
-        .bilingual-btn.active { background: #333; color: #fff; border-color: #333; }
+        .bilingual-btn { background: #ffffff; color: #475569; border: 1px solid #cbd5e1; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 13px; }
+        .bilingual-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
         
         /* 主內容區 */
         main {
@@ -74,10 +96,10 @@
           margin: 0 auto;
         }
         
-        /* =============== TED 雙欄佈局核心 =============== */
+        /* 雙欄佈局核心 */
         .row {
           display: block;
-          margin-bottom: 0; /* 移除外邊距，改用 padding 讓分隔線連貫 */
+          margin-bottom: 0;
         }
         
         .subtitle {
@@ -85,22 +107,26 @@
           display: flex;
           flex-direction: row;
           align-items: stretch;
-          border-bottom: 1px solid #f0f0f0; /* 行與行之間的微弱分隔線 */
+          border-bottom: 1px solid #e2e8f0; 
           background: transparent;
           transition: background 0.2s ease;
         }
         .subtitle:hover {
-          background: #fcfcfc;
+          background: #ffffff;
+          border-radius: 8px;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+          padding-left: 10px;
+          padding-right: 10px;
         }
         
-        /* 左側文字框 (主文區) */
+        /* 左側文字框 */
         .text-box {
-          flex: 7.5; /* 佔據 75% 寬度 */
+          flex: 7.5; 
           padding: 0 30px 0 0;
           background: transparent;
           border: none;
-          /* 【關鍵】右側垂直分隔線，還原圖片風格 */
-          border-right: 2px solid #555; 
+          /* 淺藍色垂直分隔線 */
+          border-right: 2px solid #93c5fd; 
           border-radius: 0;
           display: flex;
           flex-direction: column;
@@ -111,7 +137,7 @@
         .japanese-text {
           font-size: 18px;
           line-height: 1.7;
-          color: #111;
+          color: #0f172a;
           margin-bottom: 8px;
           word-break: break-word;
         }
@@ -120,7 +146,7 @@
           font-family: "Arial", "Microsoft YaHei", sans-serif;
           font-size: 14.5px;
           line-height: 1.6;
-          color: #666; /* 稍淡的灰色，區分主次 */
+          color: #64748b; 
           border-top: none;
           padding-top: 0;
         }
@@ -128,13 +154,13 @@
         .single-language .chinese-text { display: none; }
         .single-language .japanese-text { margin-bottom: 0; }
         
-        /* 右側筆記區 (單字區) */
+        /* 右側筆記區 */
         .note-area {
-          flex: 2.5; /* 佔據 25% 寬度 */
+          flex: 2.5; 
           padding-left: 20px;
           display: flex;
           flex-direction: column;
-          justify-content: center; /* 垂直置中，與左側文字對齊 */
+          justify-content: center; 
           position: relative;
         }
         
@@ -143,60 +169,53 @@
           display: none;
         }
         .note-container.has-note, .subtitle:hover .note-container {
-          display: flex; /* 滑鼠移過去才顯示，或者有筆記時顯示 */
+          display: flex; 
         }
         
-        /* 隱形筆記輸入框：讓它看起來像直接寫在紙上 */
+        /* 筆記輸入框：淺藍色調 */
         .note-box {
           width: 100%;
           min-height: 30px;
-          padding: 4px;
+          padding: 6px;
           background: transparent;
-          border: 1px solid transparent; /* 預設無邊框 */
+          border: 1px solid transparent; 
+          border-radius: 4px;
           font-size: 14.5px;
           font-family: inherit;
           line-height: 1.5;
-          color: #3b6038; /* 類似圖片中註解的深綠/墨色 */
+          color: #0284c7; /* 深藍色文字 */
           font-weight: 500;
           resize: none;
           overflow: hidden;
+          transition: 0.2s;
         }
         .note-box::placeholder {
-          color: #ccc;
+          color: #94a3b8;
           font-style: italic;
         }
         .note-box:focus {
           outline: none;
-          background: #fff;
-          border: 1px dashed #ccc; /* 點擊輸入時才顯示虛線框 */
-          box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+          background: var(--accent-light);
+          border: 1px dashed #93c5fd; 
         }
         
-        /* 印前防截斷純文字容器 */
-        .print-note-text {
-          display: none;
-        }
+        .print-note-text { display: none; }
         
-        /* 隱藏原生按鈕，保持畫面乾淨 */
-        .add-note-btn, .close-note-btn {
-          display: none !important;
-        }
-        
-        /* =============== 底部工具列 =============== */
+        /* 底部工具列 */
         .button-container {
           position: fixed; bottom: 30px; right: 40px; display: flex; gap: 12px; z-index: 100;
         }
-        .import-btn, .export-btn {
-          padding: 12px 20px; font-size: 14px; border: none; border-radius: 6px; cursor: pointer; color: #fff; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.15); transition: 0.2s;
+        .import-btn, .export-btn, .export-pdf-btn {
+          padding: 12px 20px; font-size: 14px; border: none; border-radius: 6px; cursor: pointer; color: #fff; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.1); transition: 0.2s;
         }
-        .import-btn { background: #34495e; }
-        .export-btn { background: var(--accent); }
-        .export-pdf-btn { background: #27ae60; }
-        .import-btn:hover, .export-btn:hover, .export-pdf-btn:hover { transform: translateY(-2px); }
+        .import-btn { background: #64748b; }
+        .export-btn { background: #0ea5e9; } /* 導出備份按鈕 */
+        .export-pdf-btn { background: var(--accent); }
+        .import-btn:hover, .export-btn:hover, .export-pdf-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0,0,0,0.15); }
         
         /* 狀態指示 */
         .global-status, .file-info {
-          position: fixed; background: #333; color: #fff; padding: 8px 16px; border-radius: 4px; font-size: 13px; z-index: 1000; display: none;
+          position: fixed; background: #1e293b; color: #fff; padding: 8px 16px; border-radius: 4px; font-size: 13px; z-index: 1000; display: none;
         }
         .global-status { top: calc(var(--header-height) + 15px); right: 40px; }
         .global-status.show { display: block; }
@@ -205,9 +224,9 @@
         .progress-container { position: fixed; top: var(--header-height); left: 0; right: 0; height: 3px; background: transparent; z-index: 999; display: none; }
         .progress-bar { height: 100%; background: var(--accent); width: 0%; transition: width 0.3s ease; }
         
-        .highlight { background: rgba(241, 196, 15, 0.4); border-radius: 2px; padding: 0 2px; }
+        .highlight { background: rgba(253, 224, 71, 0.6); border-radius: 2px; padding: 0 2px; }
         
-        /* =============== PDF 列印排版 (完美還原圖片講義感) =============== */
+        /* PDF 列印排版 */
         @media print {
           @page { size: A4; margin: 20mm 15mm; }
           body { background: #fff !important; color: #000 !important; font-size: 11pt; }
@@ -215,20 +234,20 @@
           main { padding: 0 !important; max-width: 100% !important; }
           
           .row { margin-bottom: 0 !important; page-break-inside: avoid; }
-          .subtitle { padding: 15px 0 !important; border-bottom: 1px solid #e0e0e0 !important; }
+          .subtitle { padding: 15px 0 !important; border-bottom: 1px solid #e2e8f0 !important; }
           
-          .text-box { flex: 7.5 !important; padding-right: 20px !important; border-right: 1.5px solid #000 !important; }
+          .text-box { flex: 7.5 !important; padding-right: 20px !important; border-right: 1.5px solid #94a3b8 !important; }
           .japanese-text { font-size: 14pt !important; line-height: 1.6 !important; color: #000 !important; }
-          .chinese-text { font-size: 10.5pt !important; color: #444 !important; }
+          .chinese-text { font-size: 10.5pt !important; color: #475569 !important; }
           
           .note-area { flex: 2.5 !important; padding-left: 15px !important; }
           
-          .note-container { display: none !important; } /* 隱藏 textarea */
+          .note-container { display: none !important; }
           .print-note-text {
             display: block !important;
             font-size: 11pt !important;
             line-height: 1.5 !important;
-            color: #2c5e2e !important; /* 墨綠色，印出來很有質感 */
+            color: #0284c7 !important; 
             white-space: pre-wrap;
             word-break: break-word;
           }
@@ -239,7 +258,7 @@
 <body>
     <header class="header">
         <div class="header-left">
-            <h1>小野字幕君</h1>
+            <h1>雙語筆記 - 淺藍講義</h1>
             <p>支援：.srt / .ass / .docx / .txt / .pdf</p>
         </div>
         <div class="file-search-container">
@@ -256,7 +275,7 @@
     <div class="button-container">
         <button class="import-btn" id="importBtn">導入備份</button>
         <button class="export-btn" id="exportBtn" style="display:none;">備份 HTML</button>
-        <button class="export-btn export-pdf-btn" id="exportPdfBtn" style="display:none;">🖨️ 匯出 PDF 講義</button>
+        <button class="export-pdf-btn" id="exportPdfBtn" style="display:none;">🖨️ 匯出 PDF 講義</button>
     </div>
     <input type="file" id="importFileInput" accept=".html" style="display:none" />
 
@@ -302,7 +321,7 @@
           noteCount = validNotes.length;
           const display = noteCount > 0 ? 'block' : 'none';
           document.getElementById('exportBtn').style.display = display;
-          document.getElementById('exportPdfBtn').style.display = display; // 同步顯示 PDF 按鈕
+          document.getElementById('exportPdfBtn').style.display = display; 
         }
         
         function autoResizeTextarea(textarea) {
@@ -317,7 +336,6 @@
         function processBilingualSubtitles(subtitles) {
           const processed = [];
           if (subtitles.length > 0 && subtitles[0].startTime) {
-             // 時間碼合併邏輯 (簡化以符合您的架構)
              const timeMap = {};
              subtitles.forEach((sub, i) => {
                  const key = `${sub.startTime}-${sub.endTime}`;
@@ -334,7 +352,6 @@
                  }
              });
           } else {
-             // 順序合併邏輯
              let i = 0;
              while (i < subtitles.length) {
                const cur = subtitles[i];
@@ -386,7 +403,7 @@
                   </div>
                   <div class="note-area">
                     <div class="note-container has-note">
-                      <textarea class="note-box" data-index="${i}" placeholder="Type notes here...">${escapeHtml(note)}</textarea>
+                      <textarea class="note-box" data-index="${i}" placeholder="在這裡輸入筆記...">${escapeHtml(note)}</textarea>
                     </div>
                     <div class="print-note-text" id="print-note-${i}">${escapeHtml(note)}</div>
                   </div>
@@ -402,7 +419,7 @@
             box.addEventListener('input', function() {
               autoResizeTextarea(this);
               notesData[idx] = this.value;
-              printMirror.textContent = this.value; // 同步給印表機
+              printMirror.textContent = this.value; 
               updateNoteCount();
             });
             box.addEventListener('focus', function() { autoResizeTextarea(this); });
@@ -448,18 +465,82 @@
           });
         });
         
-        // ==================== PDF 列印匯出 ====================
+        // ==================== 導入與導出核心邏輯 (已修復) ====================
+        
+        // 點擊「導入備份」按鈕，觸發隱藏的 file input
+        document.getElementById('importBtn').addEventListener('click', function() {
+          if (processedSubtitles.length === 0) {
+            alert('請先上傳字幕檔案，才能匯入對應的筆記備份！');
+            return;
+          }
+          document.getElementById('importFileInput').click(); 
+        });
+        
+        // 讀取備份 HTML 並自動還原筆記
+        document.getElementById('importFileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            
+            reader.onload = (ev) => {
+                const doc = new DOMParser().parseFromString(ev.target.result, 'text/html');
+                const items = doc.querySelectorAll('.export-item');
+                let count = 0;
+                
+                items.forEach(item => {
+                    const subtitleEl = item.querySelector('.export-note-subtitle');
+                    const contentEl = item.querySelector('.export-note-content');
+                    if (subtitleEl && contentEl) {
+                        const jaText = subtitleEl.textContent.trim();
+                        const note = contentEl.textContent.trim();
+                        
+                        // 尋找原文完全匹配的句子
+                        const idx = processedSubtitles.findIndex(s => s.japanese === jaText);
+                        if (idx !== -1) {
+                            notesData[idx] = note;
+                            count++;
+                        }
+                    }
+                });
+                
+                if (count > 0) {
+                    renderAllSubtitles(processedSubtitles);
+                    updateNoteCount();
+                    showGlobalStatus(`✅ 成功導入 ${count} 條筆記！`);
+                } else {
+                    showGlobalStatus('❌ 未找到匹配的筆記內容');
+                }
+                
+                // 清空 input 確保下次可以選擇同一個檔案
+                e.target.value = '';
+            };
+            reader.readAsText(file, 'utf-8');
+        });
+
+        // 導出備份 HTML
+        document.getElementById('exportBtn').addEventListener('click', function() {
+            const validNotes = Object.entries(notesData).filter(([k, v]) => v && v.trim() !== '');
+            let listHtml = validNotes.map(([i, note]) => `
+                <div class="export-item" style="margin-bottom:20px; padding:15px; border:1px solid #cce4f7; border-radius:8px; background:#f4f9fd;">
+                    <div class="export-note-subtitle" style="font-weight:bold; color:#0284c7; font-size:18px;">${escapeHtml(processedSubtitles[i].japanese)}</div>
+                    <div style="color:#64748b; font-size:14px; margin:6px 0;">${escapeHtml(processedSubtitles[i].chinese || '')}</div>
+                    <div class="export-note-content" style="background:#fff; padding:10px; border-left:4px solid #3b82f6; color:#0f172a; margin-top:10px; line-height:1.5;">${escapeHtml(note)}</div>
+                </div>`).join('');
+            
+            const html = `<!doctype html><html><head><meta charset="utf-8"><title>學習筆記備份</title></head><body style="max-width:800px; margin:40px auto; font-family:sans-serif; padding:0 20px;"><h2>學習筆記本</h2><hr style="border:none; border-top:1px solid #bfdbfe; margin-bottom: 20px;" />${listHtml}</body></html>`;
+            const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+            const a = document.createElement('a'); 
+            a.href = URL.createObjectURL(blob); 
+            a.download = `小野字幕君_筆記備份.html`; 
+            a.click();
+        });
+
+        // 導出 PDF 講義
         document.getElementById('exportPdfBtn').addEventListener('click', function() {
             showGlobalStatus('正在呼叫列印介面，請選擇「另存為 PDF」', 4000);
             setTimeout(() => {
                 window.print();
             }, 500);
-        });
-
-        // 舊的 HTML 匯出與導入功能
-        document.getElementById('exportBtn').addEventListener('click', function() {
-           // ... 保留您原先的匯出邏輯 ...
-           alert('如需獲得最美觀的版面，推薦點擊旁邊的「匯出 PDF 講義」按鈕！');
         });
 
     </script>
