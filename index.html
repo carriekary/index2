@@ -434,11 +434,17 @@
         });
 
 
-        // ==================== 檔案處理與其他功能 ====================
+// ==================== 檔案處理與其他功能 ====================
         document.getElementById('fileInput').addEventListener('change', function(e) {
           const file = e.target.files[0]; if(!file) return;
           const ext = file.name.split('.').pop().toLowerCase();
           currentFileName = file.name;
+          
+          // ✨【關鍵修復】：上傳新文件時，徹底清空上一篇的筆記與狀態
+          notesData = {};
+          updateNoteCount();
+          // ✨==================================================
+
           updateProgress(10, '正在讀取檔案...');
           
           const reader = new FileReader();
