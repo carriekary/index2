@@ -596,31 +596,31 @@
             reader.readAsText(file, 'utf-8');
         });
 
-// ==================== 修改後的備份 HTML 功能 ====================
+// ==================== 修改後的備份 HTML 功能（保留換行版） ====================
         document.getElementById('exportBtn').addEventListener('click', function() {
             const validNotes = Object.entries(notesData).filter(([k, v]) => v && v.trim() !== '');
             let listHtml = validNotes.map(([i, note]) => `
                 <div class="export-item" style="margin-bottom:20px; padding:15px; border:1px solid #cce4f7; border-radius:8px; background:#f4f9fd;">
                     <div class="export-note-subtitle" style="font-weight:bold; color:#0284c7; font-size:18px;">${processedSubtitles[i].displayJp}</div>
                     <div style="color:#64748b; font-size:14px; margin:6px 0;">${processedSubtitles[i].displayZh}</div>
-                    <div class="export-note-content" style="background:#fff; padding:10px; border-left:4px solid #3b82f6; color:#0f172a; margin-top:10px; line-height:1.5;">${escapeHtml(note)}</div>
+                    
+                    <div class="export-note-content" style="background:#fff; padding:10px; border-left:4px solid #3b82f6; color:#0f172a; margin-top:10px; line-height:1.5; white-space: pre-wrap;">${escapeHtml(note)}</div>
                 </div>`).join('');
             
             const style = `<style>mark.word-highlight { background-color: #fde047; color: #854d0e; border-radius: 3px; padding: 0 3px; margin: 0 1px; font-weight: 600; }</style>`;
             const html = `<!doctype html><html><head><meta charset="utf-8"><title>學習筆記備份</title>${style}</head><body style="max-width:800px; margin:40px auto; font-family:sans-serif; padding:0 20px;"><h2>學習筆記本</h2><hr style="border:none; border-top:1px solid #bfdbfe; margin-bottom: 20px;" />${listHtml}</body></html>`;
             
-            // ✨【關鍵修正】：自動抓取原檔名並去掉原本的副檔名（如 .srt/.docx），再接上「_筆記導出.html」
-            let downloadName = "小野字幕君_筆記備份.html"; // 安全備用名稱
+            // 自動帶入檔名邏輯
+            let downloadName = "小野字幕君_筆記備份.html";
             if (currentFileName) {
                 const baseName = currentFileName.substring(0, currentFileName.lastIndexOf('.')) || currentFileName;
-                downloadName = `${baseName}_筆記導出.html`;
+                downloadName = `${baseName}_筆記備份.html`;
             }
-            // ✨========================================================================
 
             const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
             const a = document.createElement('a'); 
             a.href = URL.createObjectURL(blob); 
-            a.download = downloadName; // ✨ 套用動態產生的檔名
+            a.download = downloadName; 
             a.click();
         });
 
