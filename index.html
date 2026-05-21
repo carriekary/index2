@@ -534,6 +534,7 @@
           document.getElementById('importFileInput').click(); 
         });
         
+// ==================== 升級版：高容錯率導入備份功能 ====================
         document.getElementById('importFileInput').addEventListener('change', function(e) {
             const file = e.target.files[0]; if (!file) return;
             const reader = new FileReader();
@@ -541,23 +542,38 @@
                 const doc = new DOMParser().parseFromString(ev.target.result, 'text/html');
                 const items = doc.querySelectorAll('.export-item');
                 let count = 0;
+                
+                // 輔助函式：將文字去除所有空白、換行與特殊符號，轉為純粹的比對字串
+                const cleanStr = (str) => {
+                    return str ? str.replace(/[\s\r\n\t\u3000,\.\!。\、，]/g, '').toLowerCase() : '';
+                };
+
                 items.forEach(item => {
                     const subtitleEl = item.querySelector('.export-note-subtitle');
                     const contentEl = item.querySelector('.export-note-content');
                     if (subtitleEl && contentEl) {
                         const jaText = subtitleEl.textContent.trim();
+                        const cleanedBackupJa = cleanStr(jaText); // 備份檔裡的乾淨日文
                         const note = contentEl.textContent.trim();
                         
-                        // 比對時需忽略 HTML 標籤(螢光筆)，以純文字進行精準匹配
+                        if (!cleanedBackupJa) return; // 空文字跳過
+
+                        // 比對目前的字幕/文件陣列
                         const idx = processedSubtitles.findIndex(s => {
                             const tempDiv = document.createElement('div');
                             tempDiv.innerHTML = s.displayJp;
-                            return tempDiv.textContent.trim() === jaText;
+                            const cleanedCurrentJa = cleanStr(tempDiv.textContent); // 目前網頁上的乾淨日文
+                            
+                            // ✨【關鍵容錯】：只要兩者完全一樣，或者互相包含，就視為匹配成功！
+                            return cleanedCurrentJa === cleanedBackupJa || 
+                                   cleanedCurrentJa.includes(cleanedBackupJa) || 
+                                   cleanedBackupJa.includes(cleanedCurrentJa);
                         });
                         
                         if (idx !== -1) {
                             notesData[idx] = note;
-                            // 如果備份裡有原先的螢光筆狀態(存在於HTML裡)，這裡一併復原
+                            
+                            // 如果備份裡有原先的螢光筆狀態，一併還原
                             const backupHtml = subtitleEl.innerHTML;
                             if (backupHtml.includes('<mark')) {
                                 processedSubtitles[idx].displayJp = backupHtml;
@@ -566,12 +582,14 @@
                         }
                     }
                 });
+                
                 if (count > 0) {
                     renderAllSubtitles(processedSubtitles);
                     updateNoteCount();
                     showGlobalStatus(`✅ 成功導入 ${count} 條筆記！`);
                 } else {
                     showGlobalStatus('❌ 未找到與目前文字相符的備份內容');
+                    alert('導入失敗！請確認您目前網頁上的文件，與您選擇的備份網頁是同一個作品。');
                 }
                 e.target.value = '';
             };
