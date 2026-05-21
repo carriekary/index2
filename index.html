@@ -597,6 +597,35 @@
             showGlobalStatus('正在呼叫列印介面，請選擇「另存為 PDF」', 4000);
             setTimeout(() => { window.print(); }, 500);
         });
+        // ==================== 橡皮擦：點擊取消螢光筆高亮 ====================
+        document.addEventListener('click', function(e) {
+            // 偵測是否點擊到了高亮的黃色標籤
+            if (e.target.tagName === 'MARK' && e.target.classList.contains('word-highlight')) {
+                const markNode = e.target;
+                const parent = markNode.parentNode;
+                const rowEl = markNode.closest('.row');
+                
+                if (!rowEl) return;
+                const rowIdx = rowEl.dataset.index;
+                
+                // 1. 將 <mark> 標籤扒掉，替換回原本的純文字
+                const textNode = document.createTextNode(markNode.textContent);
+                parent.replaceChild(textNode, markNode);
+                
+                // 2. 正規化 DOM，把破碎的文字節點重新接合，避免影響後續的選取
+                parent.normalize();
+                
+                // 3. 同步更新底層儲存的 HTML 資料，確保匯出或切換語言時不會死灰復燃
+                if (parent.classList.contains('japanese-text')) {
+                    processedSubtitles[rowIdx].displayJp = parent.innerHTML;
+                } else if (parent.classList.contains('chinese-text')) {
+                    processedSubtitles[rowIdx].displayZh = parent.innerHTML;
+                }
+                
+                // 顯示提示
+                showGlobalStatus('🗑️ 已取消標記', 1500);
+            }
+        });
     </script>
 </body>
 </html>
