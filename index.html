@@ -639,6 +639,15 @@
                 showGlobalStatus('🗑️ 已取消標記', 1500);
             }
         });
+        // ==================== 頁面離開確認（防止誤關/誤刪網頁） ====================
+        window.addEventListener('beforeunload', function(e) {
+            // 當偵測到寫好的筆記數量大於 0 條時，才會觸發警告
+            if (noteCount > 0) {
+                e.preventDefault();
+                e.returnValue = `您有 ${noteCount} 條未導出的筆記，確定要離開嗎？`;
+                return e.returnValue;
+            }
+        });
     </script>
 </body>
 </html>
