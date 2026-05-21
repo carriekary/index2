@@ -666,6 +666,17 @@
                 return e.returnValue;
             }
         });
+        // ==================== 筆記框自動伸縮 (Auto-Resize) 魔法 ====================
+        document.addEventListener('input', function(e) {
+            // 偵測：如果正在輸入的元素是文字框 (TEXTAREA)
+            if (e.target.tagName === 'TEXTAREA') {
+                // 1. 先把高度歸零 (auto)，這樣才能偵測到「縮小」後的高度
+                e.target.style.height = 'auto';
+                
+                // 2. 將文字框的高度，精準設定為裡面文字的實際高度 (scrollHeight)
+                e.target.style.height = (e.target.scrollHeight) + 'px';
+            }
+        });
     </script>
 </body>
 </html>
