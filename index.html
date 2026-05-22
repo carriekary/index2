@@ -7,8 +7,10 @@
     <title>小野字幕君</title>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/kuroshiro@1.2.0/dist/kuroshiro.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/kuroshiro-analyzer-kuromoji@1.1.0/dist/kuroshiro-analyzer-kuromoji.min.js"></script>
 
     <style>
         :root {
@@ -72,9 +74,16 @@
           border-right: 2px solid #93c5fd; border-radius: 0; display: flex; flex-direction: column; justify-content: center;
         }
         
-        .japanese-text { font-size: 18px; line-height: 1.7; color: #0f172a; margin-bottom: 8px; word-break: break-word; }
+        .japanese-text { font-size: 18px; line-height: 2.0; color: #0f172a; margin-bottom: 8px; word-break: break-word; }
         .chinese-text { font-family: "Arial", "Microsoft YaHei", sans-serif; font-size: 14.5px; line-height: 1.6; color: #64748b; }
         
+        /* 美化日語注音 Ruby 與避免滑鼠干涉設計 */
+        ruby { ruby-position: over; ruby-align: center; }
+        rt {
+          font-size: 0.55em; color: #64748b; letter-spacing: 0.5px; padding-bottom: 1px;
+          user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none;
+        }
+
         .single-language .chinese-text { display: none; }
         .single-language .japanese-text { margin-bottom: 0; }
         
@@ -115,7 +124,7 @@
 
         /* ==================== 螢光筆標記與浮動選單設計 ==================== */
         .word-highlight {
-            background-color: #fde047; /* TED 經典黃色螢光筆 */
+            background-color: #fde047; 
             color: #854d0e;
             border-radius: 3px;
             padding: 0 3px;
@@ -157,13 +166,12 @@
           .row { margin-bottom: 0 !important; page-break-inside: avoid; }
           .subtitle { padding: 15px 0 !important; border-bottom: 1px solid #e2e8f0 !important; }
           .text-box { flex: 7.5 !important; padding-right: 20px !important; border-right: 1.5px solid #94a3b8 !important; }
-          .japanese-text { font-size: 14pt !important; line-height: 1.6 !important; color: #000 !important; }
+          .japanese-text { font-size: 14pt !important; line-height: 1.8 !important; color: #000 !important; }
           .chinese-text { font-size: 10.5pt !important; color: #475569 !important; }
           .note-area { flex: 2.5 !important; padding-left: 15px !important; }
           .note-container { display: none !important; }
           .print-note-text { display: block !important; font-size: 11pt !important; line-height: 1.5 !important; color: #0284c7 !important; white-space: pre-wrap; word-break: break-word; }
           
-          /* 確保列印 PDF 時，黃色螢光筆底色被強制保留 */
           .word-highlight {
               background-color: #fef08a !important; 
               -webkit-print-color-adjust: exact; 
@@ -182,6 +190,13 @@
         <div class="file-search-container">
             <input id="fileInput" type="file" accept=".ass,.srt,.docx,.txt,.pdf" />
             <input id="searchBox" class="search-box" type="text" placeholder="輸入搜尋內容..." />
+            
+            <select id="furiganaSelect" class="bilingual-btn" style="outline: none; cursor: pointer;">
+                <option value="none">無注音</option>
+                <option value="hiragana">平假名注音</option>
+                <option value="katakana">片假名注音</option>
+            </select>
+
             <button id="bilingualBtn" class="bilingual-btn active">單語/雙語切換</button>
         </div>
     </header>
@@ -211,6 +226,35 @@
         let noteCount = 0;
         let bilingualEnabled = true; 
         
+        let kuroshiro = null;
+        let kuroshiroReady = false;
+
+        // 【新增字典載入邏輯】：首先使用極穩定的 UNPKG 連路，失敗時會自動切換至 jsDelivr 線路
+        async function initKuroshiro() {
+            const primaryDictPath = "https://unpkg.com/kuromoji@0.1.2/dict/"; 
+            const backupDictPath = "https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict";
+
+            try {
+                updateFileInfo('正在載入日語注音字典(約15MB)...', 0);
+                kuroshiro = new Kuroshiro();
+                
+                await kuroshiro.init(new KuromojiAnalyzer({ dictPath: primaryDictPath }));
+                kuroshiroReady = true;
+                updateFileInfo('🇯🇵 日語字典載入完成，隨時可產生注音！', 3000);
+            } catch (err) {
+                console.warn('主要 CDN 字典載入失敗，嘗試啟用備用線路...', err);
+                try {
+                    await kuroshiro.init(new KuromojiAnalyzer({ dictPath: backupDictPath }));
+                    kuroshiroReady = true;
+                    updateFileInfo('🇯🇵 日語字典已透過備用線路載入完成！', 3000);
+                } catch (backupErr) {
+                    console.error('所有字典線路均載入失敗:', backupErr);
+                    updateFileInfo('❌ 字典載入失敗，請確認您的網路連線是否正常。', 0);
+                }
+            }
+        }
+        initKuroshiro();
+
         function escapeHtml(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
         
         function updateFileInfo(msg, duration = 3000) {
@@ -246,7 +290,6 @@
         function isJapaneseText(text) { return /[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]/.test(text || ''); }
         function isChineseText(text) { return /[\u4E00-\u9FAF]/.test(text || '') && !/[\u3040-\u309F\u30A0-\u30FF]/.test(text || ''); }
         
-        // 解析時初始化用於記錄 HTML (包含螢光筆) 的欄位
         function processBilingualSubtitles(subtitles) {
           const processed = [];
           if (subtitles.length > 0 && subtitles[0].startTime) {
@@ -284,12 +327,25 @@
              }
           }
           
-          // 初始化安全的 HTML 渲染資料
           processed.forEach(sub => {
               sub.displayJp = escapeHtml(sub.japanese || '');
               sub.displayZh = escapeHtml(sub.chinese || '');
           });
           return processed;
+        }
+
+        // 批量全自動套用注音處理
+        async function autoApplyFurigana(subtitlesArray, mode) {
+            if (!kuroshiroReady) return;
+            updateProgress(75, '正在將文字批量翻譯成日語注音...');
+            for (let i = 0; i < subtitlesArray.length; i++) {
+                const sub = subtitlesArray[i];
+                if (sub.japanese) {
+                    try {
+                        sub.displayJp = await kuroshiro.convert(sub.japanese, { mode: 'furigana', to: mode });
+                    } catch (e) { console.error(e); }
+                }
+            }
         }
 
         function parseSRT(c) {
@@ -394,7 +450,6 @@
             if (!currentSelectionRange || !currentRowIdx) return;
             const selectedText = currentSelectionRange.toString().trim();
             
-            // 1. 在 DOM 中加入黃色螢光筆標籤 <mark>
             const mark = document.createElement('mark');
             mark.className = 'word-highlight';
             mark.textContent = selectedText;
@@ -402,7 +457,6 @@
             currentSelectionRange.deleteContents();
             currentSelectionRange.insertNode(mark);
             
-            // 2. 儲存 HTML (保留螢光筆狀態，切換或搜尋時不會消失)
             const rowEl = document.querySelector(`.row[data-index="${currentRowIdx}"]`);
             if (currentLangClass === 'japanese-text') {
                 processedSubtitles[currentRowIdx].displayJp = rowEl.querySelector('.japanese-text').innerHTML;
@@ -410,7 +464,6 @@
                 processedSubtitles[currentRowIdx].displayZh = rowEl.querySelector('.chinese-text').innerHTML;
             }
 
-            // 3. 單字自動帶入右側筆記框
             const noteBox = rowEl.querySelector('.note-box');
             const printNote = rowEl.querySelector('.print-note-text');
             const noteContainer = rowEl.querySelector('.note-container');
@@ -425,25 +478,21 @@
             updateNoteCount();
             autoResizeTextarea(noteBox);
             
-            // 自動聚焦到筆記框，讓您可以直接開始打解釋
             noteBox.focus(); 
 
-            // 關閉浮動選單並取消反白
             this.style.display = 'none';
             window.getSelection().removeAllRanges();
         });
 
 
-// ==================== 檔案處理與其他功能 ====================
+        // ==================== 檔案處理與其他功能 ====================
         document.getElementById('fileInput').addEventListener('change', function(e) {
           const file = e.target.files[0]; if(!file) return;
           const ext = file.name.split('.').pop().toLowerCase();
           currentFileName = file.name;
           
-          // ✨【關鍵修復】：上傳新文件時，徹底清空上一篇的筆記與狀態
           notesData = {};
           updateNoteCount();
-          // ✨==================================================
 
           updateProgress(10, '正在讀取檔案...');
           
@@ -488,6 +537,13 @@
                       if(subs.length > 0) {
                           allSubtitles = subs;
                           processedSubtitles = processBilingualSubtitles(subs);
+                          
+                          // 上傳新檔案時，根據下拉選單決定是否自動注入注音
+                          const furiganaMode = document.getElementById('furiganaSelect').value;
+                          if (furiganaMode !== 'none') {
+                              await autoApplyFurigana(processedSubtitles, furiganaMode);
+                          }
+
                           renderAllSubtitles(processedSubtitles);
                           updateProgress(100, '檔案解析完成');
                       }
@@ -497,7 +553,7 @@
               };
               reader.readAsArrayBuffer(file); 
           } else {
-              reader.onload = (ev) => {
+              reader.onload = async (ev) => {
                  let subs = [];
                  if(ext === 'srt') subs = parseSRT(ev.target.result);
                  else if(ext === 'ass') subs = parseASS(ev.target.result);
@@ -506,12 +562,56 @@
                  if(subs.length > 0) {
                      allSubtitles = subs;
                      processedSubtitles = processBilingualSubtitles(subs);
+                     
+                     const furiganaMode = document.getElementById('furiganaSelect').value;
+                     if (furiganaMode !== 'none') {
+                         await autoApplyFurigana(processedSubtitles, furiganaMode);
+                     }
+
                      renderAllSubtitles(processedSubtitles);
                      updateProgress(100, '字幕解析完成');
                  }
               };
               reader.readAsText(file, 'utf-8');
           }
+        });
+
+        // ==================== 下拉選單：切換日語注音功能 ====================
+        document.getElementById('furiganaSelect').addEventListener('change', async function() {
+            const mode = this.value;
+            if (processedSubtitles.length === 0) return; 
+            
+            if (!kuroshiroReady) {
+                alert('日語字典仍在載入中，請稍候...');
+                this.value = 'none';
+                return;
+            }
+
+            const hasHighlights = processedSubtitles.some(s => s.displayJp.includes('<mark'));
+            if (hasHighlights) {
+                if (!confirm('切換注音模式會重新生成文字，原先在日文上的「螢光筆標記」將會清除（右側筆記會完整保留），是否確定切換？')) {
+                    return;
+                }
+            }
+
+            updateProgress(10, '正在動態轉換日語注音...');
+            for (let i = 0; i < processedSubtitles.length; i++) {
+                const sub = processedSubtitles[i];
+                if (mode === 'none') {
+                    sub.displayJp = escapeHtml(sub.japanese || '');
+                } else {
+                    if (sub.japanese) {
+                        try {
+                            sub.displayJp = await kuroshiro.convert(sub.japanese, { mode: 'furigana', to: mode });
+                        } catch (e) { console.error(e); }
+                    }
+                }
+                if (i % 40 === 0) {
+                    updateProgress(10 + Math.floor((i / processedSubtitles.length) * 80), `正在處理第 ${i}/${processedSubtitles.length} 行...`);
+                }
+            }
+            renderAllSubtitles(processedSubtitles);
+            updateProgress(100, '注音轉換完成！');
         });
 
         document.getElementById('bilingualBtn').addEventListener('click', function() {
@@ -534,7 +634,7 @@
           document.getElementById('importFileInput').click(); 
         });
         
-// ==================== 升級版：高容錯率導入備份功能 ====================
+        // ==================== 高容錯率導入備份功能 ====================
         document.getElementById('importFileInput').addEventListener('change', function(e) {
             const file = e.target.files[0]; if (!file) return;
             const reader = new FileReader();
@@ -543,7 +643,6 @@
                 const items = doc.querySelectorAll('.export-item');
                 let count = 0;
                 
-                // 輔助函式：將文字去除所有空白、換行與特殊符號，轉為純粹的比對字串
                 const cleanStr = (str) => {
                     return str ? str.replace(/[\s\r\n\t\u3000,\.\!。\、，]/g, '').toLowerCase() : '';
                 };
@@ -553,18 +652,16 @@
                     const contentEl = item.querySelector('.export-note-content');
                     if (subtitleEl && contentEl) {
                         const jaText = subtitleEl.textContent.trim();
-                        const cleanedBackupJa = cleanStr(jaText); // 備份檔裡的乾淨日文
+                        const cleanedBackupJa = cleanStr(jaText); 
                         const note = contentEl.textContent.trim();
                         
-                        if (!cleanedBackupJa) return; // 空文字跳過
+                        if (!cleanedBackupJa) return; 
 
-                        // 比對目前的字幕/文件陣列
                         const idx = processedSubtitles.findIndex(s => {
                             const tempDiv = document.createElement('div');
                             tempDiv.innerHTML = s.displayJp;
-                            const cleanedCurrentJa = cleanStr(tempDiv.textContent); // 目前網頁上的乾淨日文
+                            const cleanedCurrentJa = cleanStr(tempDiv.textContent); 
                             
-                            // ✨【關鍵容錯】：只要兩者完全一樣，或者互相包含，就視為匹配成功！
                             return cleanedCurrentJa === cleanedBackupJa || 
                                    cleanedCurrentJa.includes(cleanedBackupJa) || 
                                    cleanedBackupJa.includes(cleanedCurrentJa);
@@ -572,8 +669,6 @@
                         
                         if (idx !== -1) {
                             notesData[idx] = note;
-                            
-                            // 如果備份裡有原先的螢光筆狀態，一併還原
                             const backupHtml = subtitleEl.innerHTML;
                             if (backupHtml.includes('<mark')) {
                                 processedSubtitles[idx].displayJp = backupHtml;
@@ -596,21 +691,23 @@
             reader.readAsText(file, 'utf-8');
         });
 
-// ==================== 修改後的備份 HTML 功能（保留換行版） ====================
+        // ==================== 備份 HTML 功能 ====================
         document.getElementById('exportBtn').addEventListener('click', function() {
             const validNotes = Object.entries(notesData).filter(([k, v]) => v && v.trim() !== '');
             let listHtml = validNotes.map(([i, note]) => `
                 <div class="export-item" style="margin-bottom:20px; padding:15px; border:1px solid #cce4f7; border-radius:8px; background:#f4f9fd;">
                     <div class="export-note-subtitle" style="font-weight:bold; color:#0284c7; font-size:18px;">${processedSubtitles[i].displayJp}</div>
                     <div style="color:#64748b; font-size:14px; margin:6px 0;">${processedSubtitles[i].displayZh}</div>
-                    
                     <div class="export-note-content" style="background:#fff; padding:10px; border-left:4px solid #3b82f6; color:#0f172a; margin-top:10px; line-height:1.5; white-space: pre-wrap;">${escapeHtml(note)}</div>
                 </div>`).join('');
             
-            const style = `<style>mark.word-highlight { background-color: #fde047; color: #854d0e; border-radius: 3px; padding: 0 3px; margin: 0 1px; font-weight: 600; }</style>`;
+            const style = `<style>
+                mark.word-highlight { background-color: #fde047; color: #854d0e; border-radius: 3px; padding: 0 3px; margin: 0 1px; font-weight: 600; }
+                ruby { ruby-position: over; ruby-align: center; }
+                rt { font-size: 0.55em; color: #64748b; letter-spacing: 0.5px; padding-bottom: 1px; user-select: none; -webkit-user-select: none; }
+            </style>`;
             const html = `<!doctype html><html><head><meta charset="utf-8"><title>學習筆記備份</title>${style}</head><body style="max-width:800px; margin:40px auto; font-family:sans-serif; padding:0 20px;"><h2>學習筆記本</h2><hr style="border:none; border-top:1px solid #bfdbfe; margin-bottom: 20px;" />${listHtml}</body></html>`;
             
-            // 自動帶入檔名邏輯
             let downloadName = "小野字幕君_筆記備份.html";
             if (currentFileName) {
                 const baseName = currentFileName.substring(0, currentFileName.lastIndexOf('.')) || currentFileName;
@@ -628,9 +725,9 @@
             showGlobalStatus('正在呼叫列印介面，請選擇「另存為 PDF」', 4000);
             setTimeout(() => { window.print(); }, 500);
         });
+
         // ==================== 橡皮擦：點擊取消螢光筆高亮 ====================
         document.addEventListener('click', function(e) {
-            // 偵測是否點擊到了高亮的黃色標籤
             if (e.target.tagName === 'MARK' && e.target.classList.contains('word-highlight')) {
                 const markNode = e.target;
                 const parent = markNode.parentNode;
@@ -639,41 +736,31 @@
                 if (!rowEl) return;
                 const rowIdx = rowEl.dataset.index;
                 
-                // 1. 將 <mark> 標籤扒掉，替換回原本的純文字
                 const textNode = document.createTextNode(markNode.textContent);
                 parent.replaceChild(textNode, markNode);
-                
-                // 2. 正規化 DOM，把破碎的文字節點重新接合，避免影響後續的選取
                 parent.normalize();
                 
-                // 3. 同步更新底層儲存的 HTML 資料，確保匯出或切換語言時不會死灰復燃
                 if (parent.classList.contains('japanese-text')) {
                     processedSubtitles[rowIdx].displayJp = parent.innerHTML;
                 } else if (parent.classList.contains('chinese-text')) {
                     processedSubtitles[rowIdx].displayZh = parent.innerHTML;
                 }
                 
-                // 顯示提示
                 showGlobalStatus('🗑️ 已取消標記', 1500);
             }
         });
-        // ==================== 頁面離開確認（防止誤關/誤刪網頁） ====================
+
         window.addEventListener('beforeunload', function(e) {
-            // 當偵測到寫好的筆記數量大於 0 條時，才會觸發警告
             if (noteCount > 0) {
                 e.preventDefault();
                 e.returnValue = `您有 ${noteCount} 條未導出的筆記，確定要離開嗎？`;
                 return e.returnValue;
             }
         });
-        // ==================== 筆記框自動伸縮 (Auto-Resize) 魔法 ====================
+
         document.addEventListener('input', function(e) {
-            // 偵測：如果正在輸入的元素是文字框 (TEXTAREA)
             if (e.target.tagName === 'TEXTAREA') {
-                // 1. 先把高度歸零 (auto)，這樣才能偵測到「縮小」後的高度
                 e.target.style.height = 'auto';
-                
-                // 2. 將文字框的高度，精準設定為裡面文字的實際高度 (scrollHeight)
                 e.target.style.height = (e.target.scrollHeight) + 'px';
             }
         });
