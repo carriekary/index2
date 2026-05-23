@@ -243,30 +243,39 @@ function safeInitKuroshiro() {
 }
 
 async function runKuroshiroInit() {
-    // 這次我們換一個更穩定的字典庫 CDN 來源
     const dictPath = "https://unpkg.com/kuromoji@0.1.2/dict/";
     
+    // 【萬能尋找機制】：尋找可能的 Kuroshiro 建構子位置
+    let KClass = null;
+    if (typeof Kuroshiro === 'function') {
+        KClass = Kuroshiro; // 傳統寫法
+    } else if (typeof Kuroshiro === 'object' && Kuroshiro.default) {
+        KClass = Kuroshiro.default; // ES Module 寫法
+    } else if (typeof Kuroshiro === 'object' && Kuroshiro.Kuroshiro) {
+        KClass = Kuroshiro.Kuroshiro; // 某些版本的打包寫法
+    } else {
+        console.error("找不到 Kuroshiro 建構子，目前的 Kuroshiro 變數是:", Kuroshiro);
+        alert("找不到 Kuroshiro 建構子，請查看 Console！");
+        return;
+    }
+
     try {
-        kuroshiro = new Kuroshiro();
-        updateFileInfo('正在初始化字典 (此過程需下載約 15MB 資料)...', 0);
+        updateFileInfo('正在初始化字典...', 0);
         
-        await kuroshiro.init(new KuromojiAnalyzer({ dictPath: dictPath }));
+        // 使用我們抓到的 KClass 來進行初始化
+        const kuroshiroInstance = new KClass(); 
+        await kuroshiroInstance.init(new KuromojiAnalyzer({ dictPath: dictPath }));
+        
+        // 賦值給全域變數 (假設你程式裡是用 kuroshiro 這個變數)
+        window.kuroshiro = kuroshiroInstance;
         
         kuroshiroReady = true;
         updateFileInfo('✅ 日語字典載入完成！', 3000);
-        console.log("Kuroshiro 初始化成功");
     } catch (err) {
-        // 【關鍵診斷】這裡會把真正的錯誤原因印出來
-        console.error('詳細初始化錯誤原因:', err);
-        
-        // 將錯誤訊息直接顯示在網頁上，方便你確認
+        console.error('初始化錯誤:', err);
         updateFileInfo('❌ 初始化失敗: ' + err.message, 0);
-        
-        // 如果是 404 或網路錯誤，這裡會告訴你
-        alert('初始化失敗，錯誤原因如下（請截圖給我看）：\n' + err.message);
     }
 }
-
 // 當整個網頁（包含 Script）都載入完畢後，啟動檢查循環
 window.addEventListener('load', () => {
     safeInitKuroshiro();
