@@ -229,63 +229,31 @@
         let kuroshiro = null;
         let kuroshiroReady = false;
 
-        // 【最終穩定版】保證載入後才執行
-function safeInitKuroshiro() {
-    // 檢查 Kuroshiro 和 KuromojiAnalyzer 是否已經存在於全域物件中
-    if (typeof Kuroshiro !== 'undefined' && typeof KuromojiAnalyzer !== 'undefined') {
-        console.log("✅ 檢測到套件已載入，開始初始化...");
-        runKuroshiroInit();
-    } else {
-        console.log("⏳ 等待套件載入中...");
-        // 如果還沒載入，每 100 毫秒檢查一次
-        setTimeout(safeInitKuroshiro, 100);
-    }
-}
+        // 【新增字典載入邏輯】：首先使用極穩定的 UNPKG 連路，失敗時會自動切換至 jsDelivr 線路
+        async function initKuroshiro() {
+            const primaryDictPath = "https://unpkg.com/kuromoji@0.1.2/dict/"; 
+            const backupDictPath = "https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict";
 
-async function initKuroshiro() {
-    updateFileInfo('🔍 正在檢測並初始化日語引擎...', 0);
-    
-    // 1. 偵測構造函數
-    let KClass = (typeof Kuroshiro === 'function') ? Kuroshiro : 
-                 (Kuroshiro.default ? Kuroshiro.default : null);
-
-    if (!KClass) {
-        updateFileInfo('❌ 錯誤：無法識別 Kuroshiro 格式', 0);
-        return;
-    }
-
-    const dictPath = "https://unpkg.com/kuromoji@0.1.2/dict/";
-
-    // 2. 建立超時防護 (如果 20 秒還沒載入完，強制終止)
-    const timeout = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error("下載超時：請確認網路環境是否穩定 (或是 CDN 被防火牆阻擋)")), 20000)
-    );
-
-    try {
-        const kuroshiroInstance = new KClass();
-        
-        // 3. 使用 Promise.race 競爭 (初始化 vs 超時)
-        updateFileInfo('正在下載字典 (約 15MB)...', 0);
-        await Promise.race([
-            kuroshiroInstance.init(new KuromojiAnalyzer({ dictPath: dictPath })),
-            timeout
-        ]);
-        
-        window.kuroshiro = kuroshiroInstance;
-        kuroshiroReady = true;
-        updateFileInfo('✅ 日語字典載入完成！', 3000);
-        console.log("Kuroshiro 初始化成功");
-    } catch (err) {
-        console.error('初始化失敗:', err);
-        updateFileInfo('❌ 初始化失敗: ' + err.message, 0);
-        alert('初始化失敗：' + err.message + '\n\n如果是「下載超時」，可能是因為你的網路環境無法連線到 unpkg.com，請嘗試連上 VPN 或更換網路環境試試。');
-    }
-}
-
-// 確保載入後執行
-window.addEventListener('load', () => {
-    setTimeout(initKuroshiro, 500);
-});
+            try {
+                updateFileInfo('正在載入日語注音字典(約15MB)...', 0);
+                kuroshiro = new Kuroshiro();
+                
+                await kuroshiro.init(new KuromojiAnalyzer({ dictPath: primaryDictPath }));
+                kuroshiroReady = true;
+                updateFileInfo('🇯🇵 日語字典載入完成，隨時可產生注音！', 3000);
+            } catch (err) {
+                console.warn('主要 CDN 字典載入失敗，嘗試啟用備用線路...', err);
+                try {
+                    await kuroshiro.init(new KuromojiAnalyzer({ dictPath: backupDictPath }));
+                    kuroshiroReady = true;
+                    updateFileInfo('🇯🇵 日語字典已透過備用線路載入完成！', 3000);
+                } catch (backupErr) {
+                    console.error('所有字典線路均載入失敗:', backupErr);
+                    updateFileInfo('❌ 字典載入失敗，請確認您的網路連線是否正常。', 0);
+                }
+            }
+        }
+        initKuroshiro();
 
         function escapeHtml(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
         
