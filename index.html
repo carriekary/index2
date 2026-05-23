@@ -243,16 +243,27 @@ function safeInitKuroshiro() {
 }
 
 async function runKuroshiroInit() {
-    const dictPath = "https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict/";
+    // 這次我們換一個更穩定的字典庫 CDN 來源
+    const dictPath = "https://unpkg.com/kuromoji@0.1.2/dict/";
+    
     try {
-        kuroshiro = new Kuroshiro(); // 現在確定這一定會成功了
+        kuroshiro = new Kuroshiro();
+        updateFileInfo('正在初始化字典 (此過程需下載約 15MB 資料)...', 0);
+        
         await kuroshiro.init(new KuromojiAnalyzer({ dictPath: dictPath }));
+        
         kuroshiroReady = true;
-        updateFileInfo('✅ 日語字典載入完成，可以使用！', 3000);
+        updateFileInfo('✅ 日語字典載入完成！', 3000);
         console.log("Kuroshiro 初始化成功");
     } catch (err) {
-        console.error('初始化錯誤:', err);
-        updateFileInfo('❌ 初始化失敗，請檢查網路連線。', 0);
+        // 【關鍵診斷】這裡會把真正的錯誤原因印出來
+        console.error('詳細初始化錯誤原因:', err);
+        
+        // 將錯誤訊息直接顯示在網頁上，方便你確認
+        updateFileInfo('❌ 初始化失敗: ' + err.message, 0);
+        
+        // 如果是 404 或網路錯誤，這裡會告訴你
+        alert('初始化失敗，錯誤原因如下（請截圖給我看）：\n' + err.message);
     }
 }
 
