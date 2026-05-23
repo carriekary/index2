@@ -228,38 +228,38 @@
         
         let kuroshiro = null;
         let kuroshiroReady = false;
-        
-// 【修正版】加入載入狀態檢查
-        async function initKuroshiro() {
-            // 檢查 Kuroshiro 是否已經載入到瀏覽器中
-            if (typeof Kuroshiro === 'undefined') {
-                console.error("Kuroshiro 核心套件未載入，請確認 CDN 連結是否正確");
-                updateFileInfo('❌ 核心套件載入中...請稍候', 0);
-                // 等待 1 秒後再試一次
-                setTimeout(initKuroshiro, 1000);
-                return;
-            }
 
-            const dictPath = "https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict/";
+        // 【最終穩定版】保證載入後才執行
+function safeInitKuroshiro() {
+    // 檢查 Kuroshiro 和 KuromojiAnalyzer 是否已經存在於全域物件中
+    if (typeof Kuroshiro !== 'undefined' && typeof KuromojiAnalyzer !== 'undefined') {
+        console.log("✅ 檢測到套件已載入，開始初始化...");
+        runKuroshiroInit();
+    } else {
+        console.log("⏳ 等待套件載入中...");
+        // 如果還沒載入，每 100 毫秒檢查一次
+        setTimeout(safeInitKuroshiro, 100);
+    }
+}
 
-            try {
-                updateFileInfo('正在初始化日語引擎...', 0);
-                kuroshiro = new Kuroshiro();
-                
-                await kuroshiro.init(new KuromojiAnalyzer({ dictPath: dictPath }));
-                
-                kuroshiroReady = true;
-                updateFileInfo('✅ 日語字典載入完成！', 3000);
-            } catch (err) {
-                console.error('初始化失敗:', err);
-                updateFileInfo('❌ 字典載入失敗，請檢查網路。', 0);
-            }
-        }
+async function runKuroshiroInit() {
+    const dictPath = "https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict/";
+    try {
+        kuroshiro = new Kuroshiro(); // 現在確定這一定會成功了
+        await kuroshiro.init(new KuromojiAnalyzer({ dictPath: dictPath }));
+        kuroshiroReady = true;
+        updateFileInfo('✅ 日語字典載入完成，可以使用！', 3000);
+        console.log("Kuroshiro 初始化成功");
+    } catch (err) {
+        console.error('初始化錯誤:', err);
+        updateFileInfo('❌ 初始化失敗，請檢查網路連線。', 0);
+    }
+}
 
-        // 確保網頁完全載入後再啟動
-        window.addEventListener('load', () => {
-            initKuroshiro();
-        });
+// 當整個網頁（包含 Script）都載入完畢後，啟動檢查循環
+window.addEventListener('load', () => {
+    safeInitKuroshiro();
+});
 
         function escapeHtml(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
         
