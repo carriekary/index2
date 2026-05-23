@@ -242,43 +242,45 @@ function safeInitKuroshiro() {
     }
 }
 
-async function runKuroshiroInit() {
-    const dictPath = "https://unpkg.com/kuromoji@0.1.2/dict/";
+async function initKuroshiro() {
+    updateFileInfo('🔍 正在檢測並初始化日語引擎...', 0);
     
-    // 【萬能尋找機制】：尋找可能的 Kuroshiro 建構子位置
-    let KClass = null;
-    if (typeof Kuroshiro === 'function') {
-        KClass = Kuroshiro; // 傳統寫法
-    } else if (typeof Kuroshiro === 'object' && Kuroshiro.default) {
-        KClass = Kuroshiro.default; // ES Module 寫法
-    } else if (typeof Kuroshiro === 'object' && Kuroshiro.Kuroshiro) {
-        KClass = Kuroshiro.Kuroshiro; // 某些版本的打包寫法
-    } else {
-        console.error("找不到 Kuroshiro 建構子，目前的 Kuroshiro 變數是:", Kuroshiro);
-        alert("找不到 Kuroshiro 建構子，請查看 Console！");
+    // 1. 萬能偵測：檢查 Kuroshiro 真正的構造函數在哪裡
+    // 有些版本在 Kuroshiro.default，有些在 Kuroshiro 本身
+    let KClass = (typeof Kuroshiro === 'function') ? Kuroshiro : 
+                 (Kuroshiro.default ? Kuroshiro.default : null);
+
+    if (!KClass) {
+        console.error("Kuroshiro 載入異常，變數內容為:", Kuroshiro);
+        updateFileInfo('❌ 錯誤：無法識別 Kuroshiro 格式，請查看 F12 Console', 0);
         return;
     }
 
+    // 2. 設定字典路徑 (使用 unpkg 官方源)
+    const dictPath = "https://unpkg.com/kuromoji@0.1.2/dict/";
+
     try {
-        updateFileInfo('正在初始化字典...', 0);
+        // 3. 使用偵測到的正確構造函數
+        const kuroshiroInstance = new KClass();
         
-        // 使用我們抓到的 KClass 來進行初始化
-        const kuroshiroInstance = new KClass(); 
+        // 4. 初始化 (這裡需要一點時間下載 15MB 字典，請耐心等待)
         await kuroshiroInstance.init(new KuromojiAnalyzer({ dictPath: dictPath }));
         
-        // 賦值給全域變數 (假設你程式裡是用 kuroshiro 這個變數)
-        window.kuroshiro = kuroshiroInstance;
-        
+        window.kuroshiro = kuroshiroInstance; // 把實例存到全域，方便後續使用
         kuroshiroReady = true;
+        
         updateFileInfo('✅ 日語字典載入完成！', 3000);
+        console.log("Kuroshiro 初始化成功，已可使用！");
     } catch (err) {
-        console.error('初始化錯誤:', err);
+        console.error('初始化失敗:', err);
         updateFileInfo('❌ 初始化失敗: ' + err.message, 0);
     }
 }
-// 當整個網頁（包含 Script）都載入完畢後，啟動檢查循環
+
+// 確保載入後執行
 window.addEventListener('load', () => {
-    safeInitKuroshiro();
+    // 延遲 500ms 確保所有 script 都已解析完畢
+    setTimeout(initKuroshiro, 500);
 });
 
         function escapeHtml(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
