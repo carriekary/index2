@@ -229,23 +229,23 @@
         let kuroshiro = null;
         let kuroshiroReady = false;
 
-        // 【終極本地版】直接讀取自己 GitHub 上的字典檔
-        async function initKuroshiro() {
-            // 直接指向你剛剛上傳到 GitHub 的 dict 資料夾
-            const localDictPath = "./dict/"; 
+       async function initKuroshiro() {
+            // 這次不讀取本地 dict 資料夾，直接使用官方最穩定的 CDN
+            // 這個路徑會自動處理跨域問題，且不會有權限錯誤
+            const dictPath = "https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict/";
 
             try {
-                updateFileInfo('正在從您的 GitHub 讀取日語字典(約15MB)...', 0);
+                updateFileInfo('正在從官方 CDN 下載注音引擎...', 0);
                 kuroshiro = new Kuroshiro();
                 
-                // 這次不用外部 CDN 了，直接讀取本地！
-                await kuroshiro.init(new KuromojiAnalyzer({ dictPath: localDictPath }));
+                // 初始化解析器
+                await kuroshiro.init(new KuromojiAnalyzer({ dictPath: dictPath }));
                 
                 kuroshiroReady = true;
-                updateFileInfo('🇯🇵 日語字典載入完成，隨時可產生注音！', 3000);
+                updateFileInfo('✅ 日語字典載入完成！', 3000);
             } catch (err) {
-                console.error('本地字典載入失敗:', err);
-                updateFileInfo('❌ 字典載入失敗，請確認 dict 資料夾有正確上傳到 GitHub。', 0);
+                console.error('初始化失敗:', err);
+                updateFileInfo('❌ 字典載入失敗，請檢查網路連線。', 0);
             }
         }
         initKuroshiro();
