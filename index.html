@@ -229,28 +229,23 @@
         let kuroshiro = null;
         let kuroshiroReady = false;
 
-        // 【新增字典載入邏輯】：首先使用極穩定的 UNPKG 連路，失敗時會自動切換至 jsDelivr 線路
+        // 【終極本地版】直接讀取自己 GitHub 上的字典檔
         async function initKuroshiro() {
-            const primaryDictPath = "https://unpkg.com/kuromoji@0.1.2/dict/"; 
-            const backupDictPath = "https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict";
+            // 直接指向你剛剛上傳到 GitHub 的 dict 資料夾
+            const localDictPath = "./dict/"; 
 
             try {
-                updateFileInfo('正在載入日語注音字典(約15MB)...', 0);
+                updateFileInfo('正在從您的 GitHub 讀取日語字典(約15MB)...', 0);
                 kuroshiro = new Kuroshiro();
                 
-                await kuroshiro.init(new KuromojiAnalyzer({ dictPath: primaryDictPath }));
+                // 這次不用外部 CDN 了，直接讀取本地！
+                await kuroshiro.init(new KuromojiAnalyzer({ dictPath: localDictPath }));
+                
                 kuroshiroReady = true;
                 updateFileInfo('🇯🇵 日語字典載入完成，隨時可產生注音！', 3000);
             } catch (err) {
-                console.warn('主要 CDN 字典載入失敗，嘗試啟用備用線路...', err);
-                try {
-                    await kuroshiro.init(new KuromojiAnalyzer({ dictPath: backupDictPath }));
-                    kuroshiroReady = true;
-                    updateFileInfo('🇯🇵 日語字典已透過備用線路載入完成！', 3000);
-                } catch (backupErr) {
-                    console.error('所有字典線路均載入失敗:', backupErr);
-                    updateFileInfo('❌ 字典載入失敗，請確認您的網路連線是否正常。', 0);
-                }
+                console.error('本地字典載入失敗:', err);
+                updateFileInfo('❌ 字典載入失敗，請確認 dict 資料夾有正確上傳到 GitHub。', 0);
             }
         }
         initKuroshiro();
