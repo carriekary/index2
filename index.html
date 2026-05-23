@@ -228,27 +228,38 @@
         
         let kuroshiro = null;
         let kuroshiroReady = false;
+        
+// 【修正版】加入載入狀態檢查
+        async function initKuroshiro() {
+            // 檢查 Kuroshiro 是否已經載入到瀏覽器中
+            if (typeof Kuroshiro === 'undefined') {
+                console.error("Kuroshiro 核心套件未載入，請確認 CDN 連結是否正確");
+                updateFileInfo('❌ 核心套件載入中...請稍候', 0);
+                // 等待 1 秒後再試一次
+                setTimeout(initKuroshiro, 1000);
+                return;
+            }
 
-       async function initKuroshiro() {
-            // 這次不讀取本地 dict 資料夾，直接使用官方最穩定的 CDN
-            // 這個路徑會自動處理跨域問題，且不會有權限錯誤
             const dictPath = "https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict/";
 
             try {
-                updateFileInfo('正在從官方 CDN 下載注音引擎...', 0);
+                updateFileInfo('正在初始化日語引擎...', 0);
                 kuroshiro = new Kuroshiro();
                 
-                // 初始化解析器
                 await kuroshiro.init(new KuromojiAnalyzer({ dictPath: dictPath }));
                 
                 kuroshiroReady = true;
                 updateFileInfo('✅ 日語字典載入完成！', 3000);
             } catch (err) {
                 console.error('初始化失敗:', err);
-                updateFileInfo('❌ 字典載入失敗，請檢查網路連線。', 0);
+                updateFileInfo('❌ 字典載入失敗，請檢查網路。', 0);
             }
         }
-        initKuroshiro();
+
+        // 確保網頁完全載入後再啟動
+        window.addEventListener('load', () => {
+            initKuroshiro();
+        });
 
         function escapeHtml(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
         
