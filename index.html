@@ -169,8 +169,39 @@
             position: relative;
         }
 
-        .row.search-group-start::before,
-        .row.search-group-single::before {
+        /* ==================== 新增：點擊展開與定位按鈕 ==================== */
+        .search-group-label {
+            position: absolute;
+            top: -24px;
+            left: 10px;
+            background: #3b82f6;
+            color: white;
+            padding: 2px 12px;
+            font-size: 11px;
+            font-weight: bold;
+            border-radius: 20px;
+            box-shadow: 0 2px 6px rgba(59, 130, 246, 0.2);
+            cursor: pointer;
+            z-index: 10;
+            transition: 0.2s;
+        }
+        
+        .search-group-label:hover {
+            background: #2563eb;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+        }
+
+        /* ==================== 新增：定位後的黃色閃爍特效 ==================== */
+        @keyframes flashHighlight {
+            0% { background-color: #fef08a; }
+            100% { background-color: transparent; }
+        }
+        
+        .locate-flash .subtitle {
+            animation: flashHighlight 2s ease-out;
+            border-left: 5px solid #eab308 !important;
+        }
             content: "🔍 相關上下文區塊";
             position: absolute;
             top: -24px;
@@ -238,6 +269,29 @@
               -webkit-print-color-adjust: exact; 
               print-color-adjust: exact;
           }
+        }
+/* ==================== 新增：返回搜尋浮動按鈕 ==================== */
+        #returnSearchBtn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #f59e0b;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 50px;
+            font-weight: bold;
+            font-size: 14px;
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+            cursor: pointer;
+            z-index: 9999;
+            display: none; /* 預設隱藏，只有展開全文時才顯示 */
+            border: none;
+            transition: 0.2s;
+        }
+        
+        #returnSearchBtn:hover {
+            transform: scale(1.05);
+            background: #d97706;
         }
     </style>
 </head>
@@ -594,11 +648,40 @@
           document.body.classList.toggle('single-language');
         });
         
+       // ==================== 新增：動態建立「返回搜尋」按鈕 ====================
+        let lastSearchQuery = ""; // 用來記憶剛剛搜尋了什麼
+        const returnBtn = document.createElement('button');
+        returnBtn.id = 'returnSearchBtn';
+        returnBtn.innerHTML = '🔙 返回剛才的搜尋';
+        document.body.appendChild(returnBtn);
+
+        // 點擊返回按鈕時的動作
+        returnBtn.onclick = function() {
+            const searchInput = document.getElementById('searchBox');
+            searchInput.value = lastSearchQuery; // 把記住的字塞回搜尋框
+            
+            // 恢復文法選單的顯示狀態
+            const grammarSelect = document.getElementById('grammarSelect');
+            if (grammarSelect) grammarSelect.value = lastSearchQuery;
+            
+            searchInput.dispatchEvent(new Event('input')); // 觸發搜尋
+            window.scrollTo({ top: 0, behavior: 'smooth' }); // 畫面滑回最頂端
+        };
+
         // ==================== 智能方框搜尋：前後文分組與外框包覆邏輯 ====================
         document.getElementById('searchBox').addEventListener('input', function() {
             const q = this.value.trim();
             const rows = document.querySelectorAll('.row');
 
+            // 只要搜尋框有動作，就先隱藏返回按鈕
+            if (document.getElementById('returnSearchBtn')) {
+                document.getElementById('returnSearchBtn').style.display = 'none';
+            }
+            
+            // 清除之前的定位按鈕
+            document.querySelectorAll('.search-group-label').forEach(el => el.remove());
+
+            // 1. 如果搜尋框清空，移除所有臨時外框
             if (!q) {
                 rows.forEach((row, idx) => {
                     row.style.display = 'block';
@@ -614,6 +697,7 @@
             const qLower = q.toLowerCase();
             const matchIndices = new Set();
 
+            // 2. 找到所有包含關鍵字的「核心句子」
             rows.forEach((row, idx) => {
                 const textContent = row.querySelector('.text-box').textContent.toLowerCase();
                 if (textContent.includes(qLower)) {
@@ -621,6 +705,7 @@
                 }
             });
 
+            // 3. 計算需要顯示的所有行
             const rowsToShow = new Set();
             matchIndices.forEach(idx => {
                 if (idx - 1 >= 0) rowsToShow.add(idx - 1);
@@ -628,6 +713,7 @@
                 if (idx + 1 < rows.length) rowsToShow.add(idx + 1);
             });
 
+            // 安全高亮函式
             function safeHighlight(html, query) {
                 if (!query) return html;
                 const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -635,6 +721,7 @@
                 return html.replace(regex, match => `<span class="search-highlight">${match}</span>`);
             }
 
+            // 4. 篩選要顯示的行，並計算邊界
             const visibleRowsData = [];
             rows.forEach((row, idx) => {
                 row.classList.remove('search-group-start', 'search-group-mid', 'search-group-end', 'search-group-single', 'match-target-row');
@@ -652,6 +739,7 @@
                 }
             });
 
+            // 5. 生成方框與定位按鈕
             for (let i = 0; i < visibleRowsData.length; i++) {
                 const current = visibleRowsData[i];
                 const prev = visibleRowsData[i - 1];
@@ -672,6 +760,46 @@
 
                 if (matchIndices.has(current.idx)) {
                     current.row.classList.add('match-target-row');
+                }
+
+                // ==================== 點擊展開全文並顯示「返回按鈕」 ====================
+                if (isStart) {
+                    const labelBtn = document.createElement('div');
+                    labelBtn.className = 'search-group-label';
+                    labelBtn.innerHTML = "🎯 點擊展開全文並定位此處";
+                    
+                    let targetIdx = current.idx;
+                    if (!matchIndices.has(current.idx) && visibleRowsData[i+1] && matchIndices.has(visibleRowsData[i+1].idx)) {
+                        targetIdx = visibleRowsData[i+1].idx;
+                    }
+
+                    labelBtn.onclick = function(e) {
+                        e.stopPropagation(); 
+                        
+                        const searchInput = document.getElementById('searchBox');
+                        // 【關鍵】記住目前的搜尋字串
+                        lastSearchQuery = searchInput.value; 
+                        
+                        // 清空搜尋並觸發顯示全文
+                        const grammarSelect = document.getElementById('grammarSelect');
+                        if (grammarSelect) grammarSelect.value = '';
+                        searchInput.value = '';
+                        searchInput.dispatchEvent(new Event('input'));
+                        
+                        // 延遲一點點時間，等全文顯示後，再秀出右下角的「返回按鈕」並滑動定位
+                        setTimeout(() => {
+                            document.getElementById('returnSearchBtn').style.display = 'block';
+                            
+                            const targetRow = document.querySelector(`.row[data-index="${targetIdx}"]`);
+                            if (targetRow) {
+                                targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                targetRow.classList.add('locate-flash');
+                                setTimeout(() => targetRow.classList.remove('locate-flash'), 2000);
+                            }
+                        }, 50);
+                    };
+                    
+                    current.row.appendChild(labelBtn);
                 }
             }
         });
@@ -814,80 +942,332 @@
 // ==================== N5-N1 文法資料庫 (依意思分類) ====================
         const grammarDatabase = {
             "N5": {
-                "📌 原因・理由 (因為...)": [
-                    { val: "から", text: "から (主觀原因)" },
-                    { val: "ので", text: "ので (客觀原因)" }
+                "📌 時間・順序 (在...之前/之後)": [
+                    { val: "前に", text: "～前に / 前で (在...之前)" },
+                    { val: "後に", text: "～後に / 後で (在...之後)" },
+                    { val: "てから", text: "～てから (做完...之後)" },
+                    { val: "ながら", text: "～ながら (一邊...一邊)" }
                 ],
-                "📌 請求・指示 (請...)": [
-                    { val: "てください", text: "てください (請做...)" },
-                    { val: "ないでください", text: "ないでください (請不要...)" }
+                "📌 請求・勸誘 (請.../一起...吧)": [
+                    { val: "てください", text: "～てください / てちょうだい (請做...)" },
+                    { val: "ないでください", text: "～ないでください (請不要...)" },
+                    { val: "をください", text: "～を下さい / をちょうだい (請給我...)" },
+                    { val: "ましょう", text: "～ましょう / ましょうか (一起...吧/要不要...)" },
+                    { val: "ませんか", text: "～ませんか (不一起...嗎？)" }
                 ],
-                "📌 願望・希望 (想...)": [
-                    { val: "たい", text: "たい (自己想做)" },
-                    { val: "ほしい", text: "ほしい (想要物品/對方做)" }
+                "📌 希望・願望 (想...)": [
+                    { val: "たい", text: "～たい / したくない (自己想做/不想做)" },
+                    { val: "ほしがる", text: "～したがる (第三人稱想做...)" },
+                    { val: "が欲しい", text: "～が欲しい (想要某物品)" },
+                    { val: "ほしがる", text: "～を欲しがる (第三人稱想要...)" }
+                ],
+                "📌 原因・狀態・限定 (因為/只有/沒做...)": [
+                    { val: "ので", text: "～ので / んで (因為...客觀)" },
+                    { val: "ないで", text: "～ないで / ずに (沒有做...就)" },
+                    { val: "だけ", text: "～だけ (只有...)" },
+                    { val: "と", text: "～と (一...就 / 和)" }
+                ],
+                "📌 變化・決定 (變成/決定)": [
+                    { val: "になる", text: "～になる / くなる (自然變成...)" },
+                    { val: "にする", text: "～にする / くする (人為決定/弄成...)" },
+                    { val: "です", text: "～です / ではありません (是 / 不是)" }
                 ]
             },
             "N4": {
-                "📌 意向・打算 (打算...)": [
-                    { val: "つもり", text: "つもり (打算/意圖)" },
-                    { val: "ようと思う", text: "ようと思う (想要/正在考慮)" }
+                "📌 授受表現 (給予/接受)": [
+                    { val: "あげる", text: "～あげる / やる (給別人)" },
+                    { val: "くれる", text: "～くれる / くださる (別人給我)" },
+                    { val: "もらう", text: "～もらう / いただく (從別人那裡得到)" },
+                    { val: "てあげる", text: "～てあげる / てやる (為別人做...)" },
+                    { val: "てくれる", text: "～てくれる (別人為我做...)" },
+                    { val: "てもらう", text: "～てもらう (請別人為我做...)" }
                 ],
-                "📌 經驗・過去 (曾經...)": [
-                    { val: "ことがある", text: "ことがある (有過...經驗)" }
+                "📌 許可・禁止・命令 (可以/不行/必須)": [
+                    { val: "てもいい", text: "～てもいい / でもいい (可以.../允許)" },
+                    { val: "なくてもいい", text: "～なくてもいい (不...也可以)" },
+                    { val: "てはいけない", text: "～てはいけない / てはだめだ (不可以.../禁止)" },
+                    { val: "なさい", text: "～なさい / なされ (請做.../輕微命令)" }
                 ],
-                "📌 建議・推測 (最好/也許...)": [
-                    { val: "ほうがいい", text: "ほうがいい (最好/建議)" },
-                    { val: "かもしれない", text: "かもしれない (也許/機率低)" },
-                    { val: "でしょう", text: "でしょう (大概是吧)" }
+                "📌 動作的階段與方向 (準備/正在/剛結束)": [
+                    { val: "るところだ", text: "～るところだ (正準備要...)" },
+                    { val: "ているところだ", text: "～ているところだ (正在進行中)" },
+                    { val: "たところだ", text: "～たところだ (剛剛完成...)" },
+                    { val: "たばかりだ", text: "～たばかりだ (剛...不久/心理上)" },
+                    { val: "出す", text: "～出す (突然開始...)" },
+                    { val: "続ける", text: "～続ける (持續做...)" },
+                    { val: "ていく", text: "～ていく (漸漸遠去/繼續下去)" },
+                    { val: "てくる", text: "～てくる (漸漸靠近/一直以來)" }
+                ],
+                "📌 狀態・處置 (放著/完成/保持)": [
+                    { val: "ている", text: "～ている (正在/保持某狀態)" },
+                    { val: "てある", text: "～てある (有人做好了某事放著)" },
+                    { val: "ておく", text: "～ておく / とく (事先準備好/放任)" },
+                    { val: "てしまう", text: "～てしまう / ちゃう (做完了/糟糕遺憾)" },
+                    { val: "まま", text: "～まま / ままにする (保持原狀/放著不管)" }
+                ],
+                "📌 推測・傳聞・感覺 (好像/聽說/覺得)": [
+                    { val: "そうだ", text: "～そうだ (看起來好像 / 聽說)" },
+                    { val: "ようだ", text: "～ようだ (主觀感覺好像)" },
+                    { val: "みたいだ", text: "～みたいだ (簡直像.../口語的ようだ)" },
+                    { val: "らしい", text: "～らしい (聽說/很有...的風格)" },
+                    { val: "かもしれない", text: "～かもしれない (也許/說不定)" },
+                    { val: "はずだ", text: "～はずだ / ないはずだ (按理說應該)" },
+                    { val: "がする", text: "～がする (有...的感覺/味道/聲音)" }
+                ],
+                "📌 意向・變化・努力 (打算/努力做到/變成)": [
+                    { val: "つもりだ", text: "～つもりだ (打算.../沒打算...)" },
+                    { val: "ようと思う", text: "～ようと思う (想要做...)" },
+                    { val: "ようにする", text: "～ようにする (努力做到...)" },
+                    { val: "ようになる", text: "～ようになる (變成能夠/會...了)" }
+                ],
+                "📌 可能・難易・使役・被動": [
+                    { val: "ことができる", text: "～ことができる (能夠...)" },
+                    { val: "れる", text: "～れる / られる (可能 / 被動)" },
+                    { val: "させる", text: "～せる / させる (使役: 讓/叫某人做)" },
+                    { val: "させられる", text: "～させられる (使役被動: 被迫做...)" },
+                    { val: "やすい", text: "～やすい (很容易...)" },
+                    { val: "にくい", text: "～にくい (很難...)" }
+                ],
+                "📌 程度・限定・其他 (太.../只有/大概)": [
+                    { val: "すぎる", text: "～すぎる (太過於...)" },
+                    { val: "くらい", text: "～くらい / ぐらい (大約/至少...程度)" },
+                    { val: "ほど", text: "～ほど (程度達到.../不如...)" },
+                    { val: "ばかり", text: "～ばかり / てばかり (光是/淨是做...)" },
+                    { val: "てみる", text: "～てみる (試著做做看)" },
+                    { val: "かどうか", text: "～かどうか (是否...)" },
+                    { val: "方", text: "～方 (做...的方法)" },
+                    { val: "のだ", text: "～のだ / んだ (說明原因/強調)" }
                 ]
             },
             "N3": {
-                "📌 關係・對象 (關於/對...)": [
-                    { val: "について", text: "について (關於...)" },
-                    { val: "に対して", text: "に対して (針對/面對...)" },
-                    { val: "にとって", text: "にとって (對...而言)" }
+                "📌 時間・期間 (在...之間/剛...)": [
+                    { val: "間に", text: "～間 / 間に (在...期間)" },
+                    { val: "うちに", text: "～うちに (趁著...時/在...過程中)" },
+                    { val: "最中", text: "～最中 / 真っ最中 (正當...的時候)" },
+                    { val: "以来", text: "～以来 (自從...以來)" },
+                    { val: "たところ", text: "～たところ (剛...完)" },
+                    { val: "てはじめて", text: "～てはじめて (直到...才)" },
+                    { val: "たきり", text: "～たきり (自從...之後就一直沒有)" },
+                    { val: "たび", text: "～度に (每當...總是)" },
+                    { val: "ぶり", text: "～ぶり (相隔...才)" }
                 ],
-                "📌 依據・手段 (根據...)": [
-                    { val: "によって", text: "によって (根據/由於/由...)" }
+                "📌 原因・理由 (因為/多虧/怪罪...)": [
+                    { val: "おかげで", text: "～おかげで (多虧...好結果)" },
+                    { val: "せいで", text: "～せいで (都怪...壞結果)" },
+                    { val: "によって", text: "～によって / により (由於/根據/由...)" },
+                    { val: "から言うと", text: "～から言うと / から見ると (從...來看)" },
+                    { val: "以上", text: "～以上 / 上は (既然...就必須)" },
+                    { val: "のだから", text: "～のことだから (因為是...所以)" },
+                    { val: "ものだから", text: "～もの (因為...嘛/辯解)" }
                 ],
-                "📌 理所當然・推斷 (應該...)": [
-                    { val: "はずだ", text: "はずだ (按理說必然...)" },
-                    { val: "わけだ", text: "わけだ (難怪/也就是說)" }
+                "📌 目的・條件 (為了/只要...就...)": [
+                    { val: "ように", text: "～ように (為了能.../祈願)" },
+                    { val: "ために", text: "～ために (為了...明確目的)" },
+                    { val: "さえ", text: "～さえ～ば (只要...就)" },
+                    { val: "ことには", text: "～ないことには (如果不...就不)" },
+                    { val: "としたら", text: "～としたら / とすれば (假使/如果是的話)" },
+                    { val: "ても", text: "たとえ～ても (即使...也)" }
                 ],
-                "📌 頻率・重複 (每次...)": [
-                    { val: "たびに", text: "たびに (每當...就)" }
+                "📌 逆接・對比 (雖然/明明/另一方面...)": [
+                    { val: "のに", text: "～のに (明明...卻/逆接)" },
+                    { val: "くせに", text: "～くせに (明明...卻/帶責備)" },
+                    { val: "わりに", text: "～わりに (以...來說卻)" },
+                    { val: "にしては", text: "～にしては (以...標準來看卻)" },
+                    { val: "一方", text: "～一方で (另一方面/對比)" },
+                    { val: "反面", text: "～反面 (反之/事物兩面)" },
+                    { val: "かわりに", text: "～代わりに (代替.../作為補償)" }
+                ],
+                "📌 程度・強調 (簡直/太過/充滿...)": [
+                    { val: "あまり", text: "～あまり (過於...導致)" },
+                    { val: "だらけ", text: "～だらけ (滿是/全是...負面)" },
+                    { val: "ぎみ", text: "～気味 (有點...傾向)" },
+                    { val: "がち", text: "～がち (常常會...負面傾向)" },
+                    { val: "てたまらない", text: "～てたまらない / てしょうがない (非常...受不了)" },
+                    { val: "てならない", text: "～てならない (非常.../自然產生)" },
+                    { val: "さえ", text: "～さえ / さえも (甚至連...都)" }
+                ],
+                "📌 推斷・主張 (應該/難怪/不可能...)": [
+                    { val: "はずだ", text: "～はずだ / はずがない (按理說應該/不可能)" },
+                    { val: "わけだ", text: "～わけだ / わけがない (難怪/不可能)" },
+                    { val: "わけではない", text: "～わけではない (並不是說)" },
+                    { val: "わけにはいかない", text: "～わけにはいかない (基於道義不能)" },
+                    { val: "べき", text: "～べきだ / べきだった (應該/當初應該)" },
+                    { val: "に決まっている", text: "～に決まっている (一定是這樣)" },
+                    { val: "ような気がする", text: "～ような気がする (感覺好像)" }
+                ],
+                "📌 建議・意向 (打算/建議/試試...)": [
+                    { val: "つもり", text: "～つもりだ (打算...)" },
+                    { val: "たつもりで", text: "～たつもりで (就當作是...)" },
+                    { val: "ようとする", text: "～ようとする / ようとしない (正要.../完全不想...)" },
+                    { val: "たほうがいい", text: "～たほうがいい (建議...最好)" },
+                    { val: "たらどう", text: "～たらどうですか (你覺得...怎麼樣)" },
+                    { val: "てごらん", text: "～てごらん (你試試看...輕微命令)" }
+                ],
+                "📌 対象・關聯 (關於/對/代表...)": [
+                    { val: "について", text: "～について (關於...)" },
+                    { val: "に対して", text: "～に対して (對.../相對於)" },
+                    { val: "にとって", text: "～にとって (對...而言)" },
+                    { val: "に関して", text: "～に関して (關於...正式)" },
+                    { val: "を始め", text: "～を始め (以...為首/代表)" },
+                    { val: "を中心に", text: "～を中心にして (以...為中心)" },
+                    { val: "を込めて", text: "～を込めて (傾注...感情)" },
+                    { val: "むけ", text: "～向け (專門為...設計的)" },
+                    { val: "むき", text: "～向き (適合...的)" }
                 ]
             },
             "N2": {
-                "📌 圍繞・針對 (圍繞...)": [
-                    { val: "をめぐって", text: "をめぐって (圍繞著某議題)" },
-                    { val: "にこたえて", text: "にこたえて (回應/響應)" }
+                "📌 時間・場面 (剛.../正當...)": [
+                    { val: "かと思うと", text: "～かと思うと / かと思いきや (剛...就/原以為)" },
+                    { val: "かないかのうちに", text: "～か～ないかのうちに (剛...就)" },
+                    { val: "次第", text: "～次第 (一...立刻)" },
+                    { val: "た途端", text: "～た途端に (一...就)" },
+                    { val: "たところ", text: "～たところ (剛...的時候/發現)" },
+                    { val: "てからでないと", text: "～てからでないと (如果不先...就)" },
+                    { val: "かけ", text: "～かけ / かける (剛開始.../做到一半)" },
+                    { val: "矢先", text: "～矢先 (正當...時)" }
                 ],
-                "📌 時間同時性 (剛...就...)": [
-                    { val: "かと思うと", text: "かと思うと (剛覺得...馬上就)" },
-                    { val: "たとたん", text: "たとたん (一...那一瞬間)" }
+                "📌 原因・理由 (正因為/既然...)": [
+                    { val: "からこそ", text: "～からこそ (正因為...才)" },
+                    { val: "からには", text: "～からには (既然...就)" },
+                    { val: "だけあって", text: "～だけあって / だけに (不愧是/正因為)" },
+                    { val: "くらいだから", text: "～くらいだから (正因為連...都)" },
+                    { val: "ことだから", text: "～のことだから (因為是...所以)" },
+                    { val: "につき", text: "～につき (因為...公文用語)" },
+                    { val: "ばかりに", text: "～ばかりに (就因為...導致壞結果)" }
                 ],
-                "📌 強調・極限 (連.../到極點)": [
-                    { val: "さえ", text: "さえ (連.../只要...就)" },
-                    { val: "きれない", text: "きれない (沒辦法做完)" }
+                "📌 逆接・譲歩 (雖然/即使...)": [
+                    { val: "今でこそ", text: "今でこそ～が (雖然現在...但是以前)" },
+                    { val: "からといって", text: "～からといって (雖說...但)" },
+                    { val: "つつ", text: "～つつ / つつも (雖然...但是)" },
+                    { val: "にもかかわらず", text: "～にもかかわらず (儘管...卻)" },
+                    { val: "ものの", text: "～ものの (雖然...)" },
+                    { val: "反面", text: "～反面 (另一方面)" },
+                    { val: "というより", text: "～というより (與其說...不如)" },
+                    { val: "にしても", text: "～にしても / にしろ / にせよ (即使...也)" }
+                ],
+                "📌 条件・仮定 (如果不/萬一...)": [
+                    { val: "ないことには", text: "～ないことには (如果不...就無法)" },
+                    { val: "でもしたら", text: "～でもしたら (萬一...的話)" },
+                    { val: "ようものなら", text: "～ようものなら (萬一...引發壞事)" },
+                    { val: "ものなら", text: "～ものなら (如果能...的話)" },
+                    { val: "抜きで", text: "～抜きで / なしでは (沒有...的話)" }
+                ],
+                "📌 可能・困難 (能/難以/不得不...)": [
+                    { val: "得る", text: "～得る / 得ない (可能 / 不可能)" },
+                    { val: "かねる", text: "～かねる (難以...心理上)" },
+                    { val: "かねない", text: "～かねない (極可能...壞事)" },
+                    { val: "ざるを得ない", text: "～ざるを得ない (不得不...)" },
+                    { val: "ずにはいられない", text: "～ずにはいられない (忍不住...)" },
+                    { val: "っこない", text: "～っこない (絕對不可能)" }
+                ],
+                "📌 狀態・傾向 (正在/看起來...)": [
+                    { val: "つつある", text: "～つつある (正在逐漸...)" },
+                    { val: "っぽい", text: "～っぽい (有...的傾向)" },
+                    { val: "げ", text: "～げ (似乎.../看起來)" },
+                    { val: "たまま", text: "～たまま (保持...的狀態)" }
+                ],
+                "📌 強調・限定・程度 (極度/只有/不僅...)": [
+                    { val: "限り", text: "～限り / ない限り (只要...就 / 盡量)" },
+                    { val: "に限る", text: "～に限る / に限って (最好是 / 偏偏)" },
+                    { val: "ばかりか", text: "～ばかりか (不僅...而且)" },
+                    { val: "はおろか", text: "～はおろか (別說...連)" },
+                    { val: "のみならず", text: "～のみならず (不僅...)" },
+                    { val: "ほど", text: "～ほど～はない (沒有比...更)" },
+                    { val: "どころか", text: "～どころか (哪裡是...根本是)" },
+                    { val: "どころではない", text: "～どころではない (根本不是...的時候)" },
+                    { val: "挙句", text: "～挙句 (最後/結果竟然)" }
+                ],
+                "📌 主張・断定・推量 (肯定/應該...)": [
+                    { val: "に違いない", text: "～に違いない / 相違ない (一定是)" },
+                    { val: "にほかならない", text: "～にほかならない (正是/無非是)" },
+                    { val: "に決まっている", text: "～に決まっている (肯定)" },
+                    { val: "に過ぎない", text: "～に過ぎない (只不過是)" },
+                    { val: "まい", text: "～まい (絕不/大概不會)" },
+                    { val: "わけではない", text: "～わけではない / とは限らない (未必)" }
+                ],
+                "📌 対象・基準・関連 (針對/基於/圍繞...)": [
+                    { val: "を巡って", text: "～を巡って (圍繞著...)" },
+                    { val: "に基づいて", text: "～に基づいて (基於...)" },
+                    { val: "に沿って", text: "～に沿って (順應/沿著...)" },
+                    { val: "に応じて", text: "～に応じて (根據...改變)" },
+                    { val: "に応えて", text: "～に応えて (回應...)" },
+                    { val: "を問わず", text: "～を問わず (不管.../不分...)" },
+                    { val: "に先立ち", text: "～に先立ち (在...之前)" },
+                    { val: "を通じて", text: "～を通じて / を通して (透過.../整個期間)" }
                 ]
             },
             "N1": {
-                "📌 剛...就... (時間嚴格)": [
-                    { val: "なり", text: "なり (一...立刻做出下個動作)" },
-                    { val: "が早いか", text: "が早いか (剛一...就急忙)" }
+                "📌 時間・同時性 (剛...就/以...為起點)": [
+                    { val: "が早いか", text: "～が早いか (剛一...就急忙)" },
+                    { val: "や否や", text: "～や否や / や (一...立刻)" },
+                    { val: "そばから", text: "～そばから (剛...馬上又)" },
+                    { val: "てからというもの", text: "～てからというもの (自從...之後就一直)" },
+                    { val: "を皮切りに", text: "～を皮切りにして (以...為開端)" }
                 ],
-                "📌 無關・不顧 (不管如何...)": [
-                    { val: "をものともせず", text: "をものともせず (不顧/克服困難)" },
-                    { val: "いかんによらず", text: "いかんによらず (不論情況如何)" }
+                "📌 原因・理由・契機 (正因為/因為...)": [
+                    { val: "ゆえに", text: "～ゆえに / が故 (因為.../文言)" },
+                    { val: "こととて", text: "～こととて (因為.../客氣道歉)" },
+                    { val: "ばこそ", text: "～ばこそ (正因為...才)" },
+                    { val: "とあって", text: "～とあって (因為處於...特別情況)" },
+                    { val: "を機に", text: "～を機に / を契機に (以...為契機)" },
+                    { val: "あっての", text: "～あっての (正因為有...才成立)" }
                 ],
-                "📌 情感・極致 (極致/非常)": [
-                    { val: "極まりない", text: "極まりない (極其/無以復加)" },
-                    { val: "すら", text: "すら (甚至連...都)" }
+                "📌 逆接・讓步 (雖然/無論...)": [
+                    { val: "とはいえ", text: "～とは言え / とは言うものの (雖說...但)" },
+                    { val: "といえども", text: "～と言えども (即使是...也)" },
+                    { val: "であれ", text: "～であれ / であろうと (無論是...都)" },
+                    { val: "ようが", text: "～ようが / ようと (無論...都)" },
+                    { val: "とて", text: "～とて (即使...也/做為...也)" }
+                ],
+                "📌 條件・關係 (取決於/沒有...就)": [
+                    { val: "いかんで", text: "～いかんで / いかんによっては (取決於...)" },
+                    { val: "なくして", text: "～なくして / なくしては (沒有...的話就無法)" },
+                    { val: "なしに", text: "～なしに / なしでは (沒有...的話就無法)" },
+                    { val: "とあれば", text: "～とあれば (如果是為了...的話就)" },
+                    { val: "を踏まえ", text: "～を踏まえて (基於/立足於...)" }
+                ],
+                "📌 強調・極致 (極度/只有/全是)": [
+                    { val: "極まる", text: "～極まる / 極まりない (極其.../無以復加)" },
+                    { val: "の至り", text: "～の至り (極致/非常...)" },
+                    { val: "すら", text: "～すら (甚至連...都)" },
+                    { val: "だに", text: "～だに / だにしない (連...都/光是...就)" },
+                    { val: "ずくめ", text: "～ずくめ (清一色/全是...)" },
+                    { val: "まみれ", text: "～まみれ (沾滿.../全是...負面)" },
+                    { val: "たりとも", text: "～たりとも～ない (哪怕是...也絕不)" }
+                ],
+                "📌 不可能・強制・禁不住 (絕不/不禁)": [
+                    { val: "べからず", text: "～べからず / べからざる (禁止/不該...)" },
+                    { val: "べくもない", text: "～べくもない (不可能.../無從...)" },
+                    { val: "禁じ得ない", text: "～を禁じ得ない (不禁.../無法克制)" },
+                    { val: "余儀なく", text: "～を余儀なくされる (被迫...)" },
+                    { val: "ずにはおかない", text: "～ずにはおかない (一定會.../非...不可)" },
+                    { val: "ようにも", text: "～ようにも～ない (想...也沒辦法)" }
+                ],
+                "📌 評價・主張・資格 (作為/不配/值得)": [
+                    { val: "まじき", text: "～まじき (作為...不該有的)" },
+                    { val: "たるもの", text: "～たるもの (作為...應當)" },
+                    { val: "をおいて他にない", text: "～をおいて他にない (除了...別無其他)" },
+                    { val: "に足る", text: "～に足る / に足りる (值得...)" },
+                    { val: "にたえない", text: "～にたえない (不堪.../不值一顧)" },
+                    { val: "以外の何ものでもない", text: "～以外の何ものでもない (完全就是...)" }
+                ],
+                "📌 樣子・狀態 (簡直要/宛如/一直)": [
+                    { val: "んばかりに", text: "～んばかりに (簡直就像要...)" },
+                    { val: "ごとく", text: "～ごとく / ごとき (宛如...)" },
+                    { val: "っぱなし", text: "～っぱなし (一直放任...不管)" },
+                    { val: "ずじまい", text: "～ずじまい (結果沒能...就結束了)" },
+                    { val: "めく", text: "～めく / めいた (帶有...氣息)" },
+                    { val: "ぶる", text: "～ぶる (裝作...的樣子)" }
+                ],
+                "📌 無關・除外 (無視/撇開不管)": [
+                    { val: "をよそに", text: "～をよそに (無視.../不在乎...)" },
+                    { val: "をものともせず", text: "～をものともせずに (不顧.../克服...)" },
+                    { val: "はさておき", text: "～はさておき (暫且不提...)" },
+                    { val: "そっちのけで", text: "～はそっちのけで (把...拋在腦後)" },
+                    { val: "いかんにかかわらず", text: "～いかんにかかわらず (不管...如何)" }
                 ]
             }
         };
-
         // ==================== 雙層選單連動邏輯 ====================
         const levelSelect = document.getElementById('levelSelect');
         const grammarSelect = document.getElementById('grammarSelect');
