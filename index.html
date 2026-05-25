@@ -248,10 +248,23 @@
             <h1>小野字幕君</h1>
             <p>完整支援：.srt / .ass / .docx / .txt / .pdf</p>
         </div>
-        <div class="file-search-container">
+<div class="file-search-container">
             <input id="fileInput" type="file" accept=".ass,.srt,.docx,.txt,.pdf" />
-            <input id="searchBox" class="search-box" type="text" placeholder="輸入搜尋內容..." />
             
+            <select id="levelSelect" class="search-box" style="width: 100px; cursor: pointer;">
+                <option value="">選擇級數</option>
+                <option value="N5">N5</option>
+                <option value="N4">N4</option>
+                <option value="N3">N3</option>
+                <option value="N2">N2</option>
+                <option value="N1">N1</option>
+            </select>
+
+            <select id="grammarSelect" class="search-box" style="width: 200px; cursor: pointer;" disabled>
+                <option value="">請先選擇級數...</option>
+            </select>
+
+            <input id="searchBox" class="search-box" type="text" placeholder="或手動輸入搜尋..." />
             <button id="bilingualBtn" class="bilingual-btn active">單語/雙語切換</button>
         </div>
     </header>
@@ -797,6 +810,122 @@
                 e.target.style.height = 'auto';
                 e.target.style.height = (e.target.scrollHeight) + 'px';
             }
+        });
+// ==================== N5-N1 文法資料庫 (依意思分類) ====================
+        const grammarDatabase = {
+            "N5": {
+                "📌 原因・理由 (因為...)": [
+                    { val: "から", text: "から (主觀原因)" },
+                    { val: "ので", text: "ので (客觀原因)" }
+                ],
+                "📌 請求・指示 (請...)": [
+                    { val: "てください", text: "てください (請做...)" },
+                    { val: "ないでください", text: "ないでください (請不要...)" }
+                ],
+                "📌 願望・希望 (想...)": [
+                    { val: "たい", text: "たい (自己想做)" },
+                    { val: "ほしい", text: "ほしい (想要物品/對方做)" }
+                ]
+            },
+            "N4": {
+                "📌 意向・打算 (打算...)": [
+                    { val: "つもり", text: "つもり (打算/意圖)" },
+                    { val: "ようと思う", text: "ようと思う (想要/正在考慮)" }
+                ],
+                "📌 經驗・過去 (曾經...)": [
+                    { val: "ことがある", text: "ことがある (有過...經驗)" }
+                ],
+                "📌 建議・推測 (最好/也許...)": [
+                    { val: "ほうがいい", text: "ほうがいい (最好/建議)" },
+                    { val: "かもしれない", text: "かもしれない (也許/機率低)" },
+                    { val: "でしょう", text: "でしょう (大概是吧)" }
+                ]
+            },
+            "N3": {
+                "📌 關係・對象 (關於/對...)": [
+                    { val: "について", text: "について (關於...)" },
+                    { val: "に対して", text: "に対して (針對/面對...)" },
+                    { val: "にとって", text: "にとって (對...而言)" }
+                ],
+                "📌 依據・手段 (根據...)": [
+                    { val: "によって", text: "によって (根據/由於/由...)" }
+                ],
+                "📌 理所當然・推斷 (應該...)": [
+                    { val: "はずだ", text: "はずだ (按理說必然...)" },
+                    { val: "わけだ", text: "わけだ (難怪/也就是說)" }
+                ],
+                "📌 頻率・重複 (每次...)": [
+                    { val: "たびに", text: "たびに (每當...就)" }
+                ]
+            },
+            "N2": {
+                "📌 圍繞・針對 (圍繞...)": [
+                    { val: "をめぐって", text: "をめぐって (圍繞著某議題)" },
+                    { val: "にこたえて", text: "にこたえて (回應/響應)" }
+                ],
+                "📌 時間同時性 (剛...就...)": [
+                    { val: "かと思うと", text: "かと思うと (剛覺得...馬上就)" },
+                    { val: "たとたん", text: "たとたん (一...那一瞬間)" }
+                ],
+                "📌 強調・極限 (連.../到極點)": [
+                    { val: "さえ", text: "さえ (連.../只要...就)" },
+                    { val: "きれない", text: "きれない (沒辦法做完)" }
+                ]
+            },
+            "N1": {
+                "📌 剛...就... (時間嚴格)": [
+                    { val: "なり", text: "なり (一...立刻做出下個動作)" },
+                    { val: "が早いか", text: "が早いか (剛一...就急忙)" }
+                ],
+                "📌 無關・不顧 (不管如何...)": [
+                    { val: "をものともせず", text: "をものともせず (不顧/克服困難)" },
+                    { val: "いかんによらず", text: "いかんによらず (不論情況如何)" }
+                ],
+                "📌 情感・極致 (極致/非常)": [
+                    { val: "極まりない", text: "極まりない (極其/無以復加)" },
+                    { val: "すら", text: "すら (甚至連...都)" }
+                ]
+            }
+        };
+
+        // ==================== 雙層選單連動邏輯 ====================
+        const levelSelect = document.getElementById('levelSelect');
+        const grammarSelect = document.getElementById('grammarSelect');
+        const searchBox = document.getElementById('searchBox');
+
+        levelSelect.addEventListener('change', function() {
+            const level = this.value;
+            
+            // 清空第二層
+            grammarSelect.innerHTML = '';
+            
+            if (!level) {
+                grammarSelect.innerHTML = '<option value="">請先選擇級數...</option>';
+                grammarSelect.disabled = true;
+                return;
+            }
+
+            // 啟用第二層，並加入預設初始選項
+            grammarSelect.disabled = false;
+            let optionsHtml = '<option value="">🔍 選擇文法 (依意思分類)</option>';
+            
+            // 撈取該級數的所有分類與文法
+            const categories = grammarDatabase[level];
+            for (const [categoryName, grammars] of Object.entries(categories)) {
+                optionsHtml += `<optgroup label="${categoryName}">`;
+                grammars.forEach(g => {
+                    optionsHtml += `<option value="${g.val}">${g.text}</option>`;
+                });
+                optionsHtml += `</optgroup>`;
+            }
+            
+            grammarSelect.innerHTML = optionsHtml;
+        });
+
+        // 當第二層文法被選中時，連動原本的「3句一組大方框搜尋」
+        grammarSelect.addEventListener('change', function() {
+            searchBox.value = this.value; 
+            searchBox.dispatchEvent(new Event('input')); // 完美觸發您原本寫好的高亮與方框功能！
         });
     </script>
 </body>
