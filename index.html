@@ -8,13 +8,9 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
-    
-    <script src="https://cdn.jsdelivr.net/npm/kuroshiro@1.2.0/dist/kuroshiro.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/kuroshiro-analyzer-kuromoji@1.1.0/dist/kuroshiro-analyzer-kuromoji.min.js"></script>
 
     <style>
         :root {
-          --header-height: 80px;
           --accent: #3b82f6; 
           --accent-dark: #0284c7; 
           --accent-light: #eff6ff; 
@@ -35,18 +31,19 @@
           background: var(--bg-color); color: #1e293b;
         }
         
-        /* 頂部導航 */
+        /* 頂部導航：改為相對定位 (relative)，解決遮擋字幕的問題 */
         .header {
-          position: fixed; top: 0; left: 0; right: 0; height: var(--header-height);
-          display: flex; align-items: center; justify-content: space-between; padding: 0 40px;
-          background: #ffffff; z-index: 999; border-bottom: 1px solid var(--border-color);
+          position: relative; 
+          display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; 
+          padding: 20px 40px; gap: 15px;
+          background: #ffffff; z-index: 990; border-bottom: 1px solid var(--border-color);
           box-shadow: 0 4px 12px rgba(59, 130, 246, 0.05);
         }
         
         .header-left h1 { margin: 0; font-size: 24px; color: var(--accent-dark); font-family: "Arial", sans-serif; font-weight: 800; letter-spacing: 1px; }
         .header-left p { margin: 4px 0 0 0; font-size: 12px; color: #64748b; font-family: sans-serif; }
         
-        .file-search-container { display: flex; gap: 12px; align-items: center; }
+        .file-search-container { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
         .search-box { padding: 8px 12px; border-radius: 4px; border: 1px solid #cbd5e1; font-size: 13px; width: 220px; outline: none; background: #ffffff; }
         .search-box:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2); }
         
@@ -56,15 +53,16 @@
         }
         input[type="file"]::file-selector-button:hover { background: var(--accent-light); border-color: var(--border-color); }
         
-        .bilingual-btn { background: #ffffff; color: #475569; border: 1px solid #cbd5e1; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 13px; }
+        .bilingual-btn { background: #ffffff; color: #475569; border: 1px solid #cbd5e1; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 13px; white-space: nowrap; }
         .bilingual-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
         
-        main { padding: calc(var(--header-height) + 40px) var(--container-padding) 140px; max-width: var(--max-width); margin: 0 auto; }
+        /* 調整 main 內距，因為頂部不再固定，所以縮小上方空白 */
+        main { padding: 30px var(--container-padding) 140px; max-width: var(--max-width); margin: 0 auto; }
         
         .row { display: block; margin-bottom: 0; }
         
         .subtitle {
-          padding: 20px 0; display: flex; flex-direction: row; align-items: stretch;
+          padding: 15px 0; display: flex; flex-direction: row; align-items: stretch;
           border-bottom: 1px solid #e2e8f0; background: transparent; transition: background 0.2s ease;
         }
         .subtitle:hover { background: #ffffff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
@@ -74,16 +72,10 @@
           border-right: 2px solid #93c5fd; border-radius: 0; display: flex; flex-direction: column; justify-content: center;
         }
         
-        .japanese-text { font-size: 18px; line-height: 2.0; color: #0f172a; margin-bottom: 8px; word-break: break-word; }
-        .chinese-text { font-family: "Arial", "Microsoft YaHei", sans-serif; font-size: 14.5px; line-height: 1.6; color: #64748b; }
+        /* 調整行距：日文改為 1.5，中文改為 1.4，縮小字體間距 */
+        .japanese-text { font-size: 18px; line-height: 1.5; color: #0f172a; margin-bottom: 4px; word-break: break-word; }
+        .chinese-text { font-family: "Arial", "Microsoft YaHei", sans-serif; font-size: 14.5px; line-height: 1.4; color: #64748b; }
         
-        /* 美化日語注音 Ruby 與避免滑鼠干涉設計 */
-        ruby { ruby-position: over; ruby-align: center; }
-        rt {
-          font-size: 0.55em; color: #64748b; letter-spacing: 0.5px; padding-bottom: 1px;
-          user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none;
-        }
-
         .single-language .chinese-text { display: none; }
         .single-language .japanese-text { margin-bottom: 0; }
         
@@ -116,10 +108,10 @@
         .global-status, .file-info {
           position: fixed; background: #1e293b; color: #fff; padding: 8px 16px; border-radius: 4px; font-size: 13px; z-index: 1000; display: none;
         }
-        .global-status { top: calc(var(--header-height) + 15px); right: 40px; }
+        .global-status { top: 20px; right: 40px; }
         .global-status.show { display: block; }
         .file-info { bottom: 40px; left: 40px; }
-        .progress-container { position: fixed; top: var(--header-height); left: 0; right: 0; height: 3px; background: transparent; z-index: 999; display: none; }
+        .progress-container { position: fixed; top: 0; left: 0; right: 0; height: 3px; background: transparent; z-index: 1000; display: none; }
         .progress-bar { height: 100%; background: var(--accent); width: 0%; transition: width 0.3s ease; }
 
         /* ==================== 螢光筆標記與浮動選單設計 ==================== */
@@ -145,8 +137,77 @@
         }
         .float-menu:hover::after { border-color: #3b82f6 transparent transparent transparent; }
 
+        /* ==================== 搜尋關鍵字高亮 ==================== */
+        .search-highlight {
+            background-color: #bbf7d0; /* 亮綠色底 */
+            color: #166534; /* 深綠色字 */
+            border-radius: 3px;
+            padding: 0 2px;
+            font-weight: bold;
+            box-shadow: 0 0 0 1px #86efac;
+        }
+
+        /* ==================== 搜尋結果：3句一組大方框設計 ==================== */
+        .row.search-group-start,
+        .row.search-group-mid,
+        .row.search-group-end,
+        .row.search-group-single {
+            background: #ffffff !important;
+            padding-left: 20px;
+            padding-right: 20px;
+            border-left: 2px solid #cbd5e1;
+            border-right: 2px solid #cbd5e1;
+        }
+
+        .row.search-group-start,
+        .row.search-group-single {
+            margin-top: 40px;
+            border-top: 2px solid #3b82f6;
+            border-top-left-radius: 12px;
+            border-top-right-radius: 12px;
+            padding-top: 15px;
+            position: relative;
+        }
+
+        .row.search-group-start::before,
+        .row.search-group-single::before {
+            content: "🔍 相關上下文區塊";
+            position: absolute;
+            top: -24px;
+            left: 10px;
+            background: #3b82f6;
+            color: white;
+            padding: 2px 12px;
+            font-size: 11px;
+            font-weight: bold;
+            border-radius: 20px;
+            box-shadow: 0 2px 6px rgba(59, 130, 246, 0.2);
+        }
+
+        .row.search-group-end,
+        .row.search-group-single {
+            margin-bottom: 25px;
+            border-bottom: 2px solid #cbd5e1;
+            border-bottom-left-radius: 12px;
+            border-bottom-right-radius: 12px;
+            padding-bottom: 15px;
+        }
+
+        .row.search-group-end .subtitle,
+        .row.search-group-single .subtitle {
+            border-bottom: none !important;
+        }
+
+        .row.match-target-row .subtitle {
+            background: #f8fafc;
+            border-left: 4px solid #10b981;
+            padding-left: 12px;
+            margin-left: -12px;
+            border-radius: 4px;
+        }
+
         @media (max-width: 900px) {
-          :root { --header-height: auto; --container-padding: 15px; }
+          :root { --container-padding: 15px; }
           .header { position: relative; flex-direction: column; align-items: flex-start; padding: 20px; gap: 15px; }
           .file-search-container { flex-direction: column; align-items: stretch; width: 100%; }
           .search-box { width: 100%; }
@@ -154,7 +215,7 @@
           .subtitle { flex-direction: column; padding: 15px; }
           .text-box { padding: 0 0 15px 0; border-right: none; border-bottom: 2px dashed #93c5fd; }
           .note-area { padding: 15px 0 0 0; }
-          .button-container { bottom: 15px; right: 15px; left: 15px; justify-content: space-between; }
+          .button-container { bottom: 15px; right: 15px; left: 15px; justify-content: space-between; flex-wrap: wrap; }
           .import-btn, .export-btn, .export-pdf-btn { flex: 1; padding: 12px 10px; font-size: 13px; text-align: center; }
         }
 
@@ -166,8 +227,8 @@
           .row { margin-bottom: 0 !important; page-break-inside: avoid; }
           .subtitle { padding: 15px 0 !important; border-bottom: 1px solid #e2e8f0 !important; }
           .text-box { flex: 7.5 !important; padding-right: 20px !important; border-right: 1.5px solid #94a3b8 !important; }
-          .japanese-text { font-size: 14pt !important; line-height: 1.8 !important; color: #000 !important; }
-          .chinese-text { font-size: 10.5pt !important; color: #475569 !important; }
+          .japanese-text { font-size: 14pt !important; line-height: 1.5 !important; color: #000 !important; }
+          .chinese-text { font-size: 10.5pt !important; line-height: 1.4 !important; color: #475569 !important; }
           .note-area { flex: 2.5 !important; padding-left: 15px !important; }
           .note-container { display: none !important; }
           .print-note-text { display: block !important; font-size: 11pt !important; line-height: 1.5 !important; color: #0284c7 !important; white-space: pre-wrap; word-break: break-word; }
@@ -191,12 +252,6 @@
             <input id="fileInput" type="file" accept=".ass,.srt,.docx,.txt,.pdf" />
             <input id="searchBox" class="search-box" type="text" placeholder="輸入搜尋內容..." />
             
-            <select id="furiganaSelect" class="bilingual-btn" style="outline: none; cursor: pointer;">
-                <option value="none">無注音</option>
-                <option value="hiragana">平假名注音</option>
-                <option value="katakana">片假名注音</option>
-            </select>
-
             <button id="bilingualBtn" class="bilingual-btn active">單語/雙語切換</button>
         </div>
     </header>
@@ -225,35 +280,6 @@
         let notesData = {};
         let noteCount = 0;
         let bilingualEnabled = true; 
-        
-        let kuroshiro = null;
-        let kuroshiroReady = false;
-
-        // 【新增字典載入邏輯】：首先使用極穩定的 UNPKG 連路，失敗時會自動切換至 jsDelivr 線路
-        async function initKuroshiro() {
-            const primaryDictPath = "https://unpkg.com/kuromoji@0.1.2/dict/"; 
-            const backupDictPath = "https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict";
-
-            try {
-                updateFileInfo('正在載入日語注音字典(約15MB)...', 0);
-                kuroshiro = new Kuroshiro();
-                
-                await kuroshiro.init(new KuromojiAnalyzer({ dictPath: primaryDictPath }));
-                kuroshiroReady = true;
-                updateFileInfo('🇯🇵 日語字典載入完成，隨時可產生注音！', 3000);
-            } catch (err) {
-                console.warn('主要 CDN 字典載入失敗，嘗試啟用備用線路...', err);
-                try {
-                    await kuroshiro.init(new KuromojiAnalyzer({ dictPath: backupDictPath }));
-                    kuroshiroReady = true;
-                    updateFileInfo('🇯🇵 日語字典已透過備用線路載入完成！', 3000);
-                } catch (backupErr) {
-                    console.error('所有字典線路均載入失敗:', backupErr);
-                    updateFileInfo('❌ 字典載入失敗，請確認您的網路連線是否正常。', 0);
-                }
-            }
-        }
-        initKuroshiro();
 
         function escapeHtml(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
         
@@ -332,20 +358,6 @@
               sub.displayZh = escapeHtml(sub.chinese || '');
           });
           return processed;
-        }
-
-        // 批量全自動套用注音處理
-        async function autoApplyFurigana(subtitlesArray, mode) {
-            if (!kuroshiroReady) return;
-            updateProgress(75, '正在將文字批量翻譯成日語注音...');
-            for (let i = 0; i < subtitlesArray.length; i++) {
-                const sub = subtitlesArray[i];
-                if (sub.japanese) {
-                    try {
-                        sub.displayJp = await kuroshiro.convert(sub.japanese, { mode: 'furigana', to: mode });
-                    } catch (e) { console.error(e); }
-                }
-            }
         }
 
         function parseSRT(c) {
@@ -537,13 +549,6 @@
                       if(subs.length > 0) {
                           allSubtitles = subs;
                           processedSubtitles = processBilingualSubtitles(subs);
-                          
-                          // 上傳新檔案時，根據下拉選單決定是否自動注入注音
-                          const furiganaMode = document.getElementById('furiganaSelect').value;
-                          if (furiganaMode !== 'none') {
-                              await autoApplyFurigana(processedSubtitles, furiganaMode);
-                          }
-
                           renderAllSubtitles(processedSubtitles);
                           updateProgress(100, '檔案解析完成');
                       }
@@ -562,12 +567,6 @@
                  if(subs.length > 0) {
                      allSubtitles = subs;
                      processedSubtitles = processBilingualSubtitles(subs);
-                     
-                     const furiganaMode = document.getElementById('furiganaSelect').value;
-                     if (furiganaMode !== 'none') {
-                         await autoApplyFurigana(processedSubtitles, furiganaMode);
-                     }
-
                      renderAllSubtitles(processedSubtitles);
                      updateProgress(100, '字幕解析完成');
                  }
@@ -576,55 +575,92 @@
           }
         });
 
-        // ==================== 下拉選單：切換日語注音功能 ====================
-        document.getElementById('furiganaSelect').addEventListener('change', async function() {
-            const mode = this.value;
-            if (processedSubtitles.length === 0) return; 
-            
-            if (!kuroshiroReady) {
-                alert('日語字典仍在載入中，請稍候...');
-                this.value = 'none';
-                return;
-            }
-
-            const hasHighlights = processedSubtitles.some(s => s.displayJp.includes('<mark'));
-            if (hasHighlights) {
-                if (!confirm('切換注音模式會重新生成文字，原先在日文上的「螢光筆標記」將會清除（右側筆記會完整保留），是否確定切換？')) {
-                    return;
-                }
-            }
-
-            updateProgress(10, '正在動態轉換日語注音...');
-            for (let i = 0; i < processedSubtitles.length; i++) {
-                const sub = processedSubtitles[i];
-                if (mode === 'none') {
-                    sub.displayJp = escapeHtml(sub.japanese || '');
-                } else {
-                    if (sub.japanese) {
-                        try {
-                            sub.displayJp = await kuroshiro.convert(sub.japanese, { mode: 'furigana', to: mode });
-                        } catch (e) { console.error(e); }
-                    }
-                }
-                if (i % 40 === 0) {
-                    updateProgress(10 + Math.floor((i / processedSubtitles.length) * 80), `正在處理第 ${i}/${processedSubtitles.length} 行...`);
-                }
-            }
-            renderAllSubtitles(processedSubtitles);
-            updateProgress(100, '注音轉換完成！');
-        });
-
         document.getElementById('bilingualBtn').addEventListener('click', function() {
           bilingualEnabled = !bilingualEnabled;
           this.classList.toggle('active');
           document.body.classList.toggle('single-language');
         });
         
+        // ==================== 智能方框搜尋：前後文分組與外框包覆邏輯 ====================
         document.getElementById('searchBox').addEventListener('input', function() {
-          const q = this.value.trim().toLowerCase();
-          document.querySelectorAll('.row').forEach(row => {
-            row.style.display = row.textContent.toLowerCase().includes(q) ? 'block' : 'none';
-          });
+            const q = this.value.trim();
+            const rows = document.querySelectorAll('.row');
+
+            if (!q) {
+                rows.forEach((row, idx) => {
+                    row.style.display = 'block';
+                    row.classList.remove('search-group-start', 'search-group-mid', 'search-group-end', 'search-group-single', 'match-target-row');
+                    const jpEl = row.querySelector('.japanese-text');
+                    const zhEl = row.querySelector('.chinese-text');
+                    if(jpEl) jpEl.innerHTML = processedSubtitles[idx].displayJp;
+                    if(zhEl && processedSubtitles[idx].chinese) zhEl.innerHTML = processedSubtitles[idx].displayZh;
+                });
+                return;
+            }
+
+            const qLower = q.toLowerCase();
+            const matchIndices = new Set();
+
+            rows.forEach((row, idx) => {
+                const textContent = row.querySelector('.text-box').textContent.toLowerCase();
+                if (textContent.includes(qLower)) {
+                    matchIndices.add(idx);
+                }
+            });
+
+            const rowsToShow = new Set();
+            matchIndices.forEach(idx => {
+                if (idx - 1 >= 0) rowsToShow.add(idx - 1);
+                rowsToShow.add(idx);
+                if (idx + 1 < rows.length) rowsToShow.add(idx + 1);
+            });
+
+            function safeHighlight(html, query) {
+                if (!query) return html;
+                const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                const regex = new RegExp(`(?![^<]*>)${escapedQuery}`, 'gi');
+                return html.replace(regex, match => `<span class="search-highlight">${match}</span>`);
+            }
+
+            const visibleRowsData = [];
+            rows.forEach((row, idx) => {
+                row.classList.remove('search-group-start', 'search-group-mid', 'search-group-end', 'search-group-single', 'match-target-row');
+
+                if (rowsToShow.has(idx)) {
+                    row.style.display = 'block';
+                    visibleRowsData.push({ row, idx });
+
+                    const jpEl = row.querySelector('.japanese-text');
+                    const zhEl = row.querySelector('.chinese-text');
+                    if (jpEl) jpEl.innerHTML = safeHighlight(processedSubtitles[idx].displayJp, q);
+                    if (zhEl && processedSubtitles[idx].chinese) zhEl.innerHTML = safeHighlight(processedSubtitles[idx].displayZh, q);
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            for (let i = 0; i < visibleRowsData.length; i++) {
+                const current = visibleRowsData[i];
+                const prev = visibleRowsData[i - 1];
+                const next = visibleRowsData[i + 1];
+
+                const isStart = !prev || current.idx !== prev.idx + 1;
+                const isEnd = !next || next.idx !== current.idx + 1;
+
+                if (isStart && isEnd) {
+                    current.row.classList.add('search-group-single');
+                } else if (isStart) {
+                    current.row.classList.add('search-group-start');
+                } else if (isEnd) {
+                    current.row.classList.add('search-group-end');
+                } else {
+                    current.row.classList.add('search-group-mid');
+                }
+
+                if (matchIndices.has(current.idx)) {
+                    current.row.classList.add('match-target-row');
+                }
+            }
         });
         
         document.getElementById('importBtn').addEventListener('click', function() {
@@ -703,8 +739,6 @@
             
             const style = `<style>
                 mark.word-highlight { background-color: #fde047; color: #854d0e; border-radius: 3px; padding: 0 3px; margin: 0 1px; font-weight: 600; }
-                ruby { ruby-position: over; ruby-align: center; }
-                rt { font-size: 0.55em; color: #64748b; letter-spacing: 0.5px; padding-bottom: 1px; user-select: none; -webkit-user-select: none; }
             </style>`;
             const html = `<!doctype html><html><head><meta charset="utf-8"><title>學習筆記備份</title>${style}</head><body style="max-width:800px; margin:40px auto; font-family:sans-serif; padding:0 20px;"><h2>學習筆記本</h2><hr style="border:none; border-top:1px solid #bfdbfe; margin-bottom: 20px;" />${listHtml}</body></html>`;
             
