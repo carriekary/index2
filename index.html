@@ -202,6 +202,9 @@
             animation: flashHighlight 2s ease-out;
             border-left: 5px solid #eab308 !important;
         }
+        
+        /* 修正原本遺漏名稱的樣式宣告區塊 */
+        .search-group-context-label {
             content: "🔍 相關上下文區塊";
             position: absolute;
             top: -24px;
@@ -237,17 +240,52 @@
             border-radius: 4px;
         }
 
+        /* ==================== 響應式：手機與小螢幕比例縮小優化 ==================== */
         @media (max-width: 900px) {
           :root { --container-padding: 15px; }
-          .header { position: relative; flex-direction: column; align-items: flex-start; padding: 20px; gap: 15px; }
-          .file-search-container { flex-direction: column; align-items: stretch; width: 100%; }
-          .search-box { width: 100%; }
-          main { padding-top: 20px; }
+          
+          /* 縮小 Header 內襯墊與間距，防止過度佔用高度 */
+          .header { 
+            position: relative; 
+            flex-direction: column; 
+            align-items: stretch; 
+            padding: 12px 16px; 
+            gap: 12px; 
+          }
+          
+          /* 標題與文字等比例縮小並置中 */
+          .header-left h1 { font-size: 20px; text-align: center; }
+          .header-left p { font-size: 11px; text-align: center; margin-top: 2px; }
+          
+          /* 改為 Grid 網格系統，讓元件緊湊排列不臃腫 */
+          .file-search-container { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 8px; 
+            width: 100%; 
+          }
+          
+          /* 全寬元件配置 */
+          #fileInput { grid-column: span 2; width: 100%; font-size: 12px; }
+          #searchBox { grid-column: span 2; width: 100% !important; }
+          #bilingualBtn { grid-column: span 2; width: 100%; }
+          
+          /* 讓兩個選單左右並排平分空間，大幅節省高度 */
+          #levelSelect { grid-column: span 1; width: 100% !important; }
+          #grammarSelect { grid-column: span 1; width: 100% !important; }
+          
+          /* 縮小輸入框與按鈕的內距和字體 */
+          .search-box { padding: 6px 10px; font-size: 12px; }
+          input[type="file"]::file-selector-button { padding: 6px 10px; font-size: 12px; }
+          .bilingual-btn { padding: 6px 10px; font-size: 12px; }
+          
+          main { padding-top: 15px; }
           .subtitle { flex-direction: column; padding: 15px; }
           .text-box { padding: 0 0 15px 0; border-right: none; border-bottom: 2px dashed #93c5fd; }
           .note-area { padding: 15px 0 0 0; }
+          
           .button-container { bottom: 15px; right: 15px; left: 15px; justify-content: space-between; flex-wrap: wrap; }
-          .import-btn, .export-btn, .export-pdf-btn { flex: 1; padding: 12px 10px; font-size: 13px; text-align: center; }
+          .import-btn, .export-btn, .export-pdf-btn { flex: 1; padding: 10px 8px; font-size: 12px; text-align: center; }
         }
 
         @media print {
@@ -270,7 +308,8 @@
               print-color-adjust: exact;
           }
         }
-/* ==================== 新增：返回搜尋浮動按鈕 ==================== */
+        
+        /* ==================== 新增：返回搜尋浮動按鈕 ==================== */
         #returnSearchBtn {
             position: fixed;
             bottom: 30px;
@@ -302,7 +341,7 @@
             <h1>小野字幕君</h1>
             <p>完整支援：.srt / .ass / .docx / .txt / .pdf</p>
         </div>
-<div class="file-search-container">
+        <div class="file-search-container">
             <input id="fileInput" type="file" accept=".ass,.srt,.docx,.txt,.pdf" />
             
             <select id="levelSelect" class="search-box" style="width: 100px; cursor: pointer;">
@@ -939,9 +978,10 @@
                 e.target.style.height = (e.target.scrollHeight) + 'px';
             }
         });
-// ==================== N5-N1 文法資料庫 (依意思分類) ====================
+
+        // ==================== N5-N1 文法資料庫 ====================
         const grammarDatabase = {
-            "N5": {
+             "N5": {
                 "📌 時間・順序 (在...之前/之後)": [
                     { val: "前に", text: "～前に / 前で (在...之前)" },
                     { val: "後に", text: "～後に / 後で (在...之後)" },
@@ -1423,8 +1463,11 @@
                     { "val": "を禁じ得ない", "text": "～を禁じ得ない (不禁.../無法克制)" },
                     { "val": "を余儀なくされる", "text": "～を余儀なくされる／～を余儀なくさせる (被迫...)" }
                 ]
-            }
+        }
+
         };
+
+
         // ==================== 雙層選單連動邏輯 ====================
         const levelSelect = document.getElementById('levelSelect');
         const grammarSelect = document.getElementById('grammarSelect');
@@ -1447,12 +1490,14 @@
             let optionsHtml = '<option value="">🔍 選擇文法 (依意思分類)</option>';
             
             // 撈取該級數的所有分類與文法
-            const categories = grammarDatabase[level];
+            const categories = grammarDatabase[level] || {};
             for (const [categoryName, grammars] of Object.entries(categories)) {
                 optionsHtml += `<optgroup label="${categoryName}">`;
-                grammars.forEach(g => {
-                    optionsHtml += `<option value="${g.val}">${g.text}</option>`;
-                });
+                if (Array.isArray(grammars)) {
+                    grammars.forEach(g => {
+                        optionsHtml += `<option value="${g.val}">${g.text}</option>`;
+                    });
+                }
                 optionsHtml += `</optgroup>`;
             }
             
